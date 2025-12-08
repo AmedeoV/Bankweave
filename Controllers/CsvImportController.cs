@@ -131,6 +131,36 @@ public class CsvImportController : ControllerBase
             // Save transactions first
             await _dbContext.SaveChangesAsync();
 
+            // After import, try to improve categorization for generic categories
+            var importedTransactions = await _dbContext.MoneyMovements
+                .Where(m => m.FinancialAccountId == account.Id)
+                .Where(m => m.Category == "Income" || m.Category == "Expenses" || m.Category == "Other" || string.IsNullOrEmpty(m.Category))
+                .ToListAsync();
+
+            int recategorized = 0;
+            foreach (var txn in importedTransactions)
+            {
+                var (newCategory, markAsEssential) = await _categorizationService.CategorizeTransactionWithDetailsAsync(
+                    userId,
+                    txn.Description ?? "",
+                    txn.CounterpartyName,
+                    txn.Amount);
+
+                // Only update if we got a more specific category
+                if (newCategory != "Income" && newCategory != "Expenses" && newCategory != "Other")
+                {
+                    txn.Category = newCategory;
+                    txn.IsEssentialExpense = markAsEssential;
+                    recategorized++;
+                }
+            }
+
+            if (recategorized > 0)
+            {
+                await _dbContext.SaveChangesAsync();
+                _logger.LogInformation("Re-categorized {Count} transactions after CSV import", recategorized);
+            }
+
             // For credit cards, don't update the balance from CSV imports
             // User will manually update the balance, and transactions are just for analytics
             if (!account.IsCreditCard)
