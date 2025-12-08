@@ -17,5 +17,11 @@ public class MoneyMovement
     public bool IsEssentialExpense { get; set; } = false;
     public DateTime CreatedAt { get; set; }
     
+    // Encrypted fields for zero-knowledge privacy
+    public string? DescriptionEncrypted { get; set; }
+    public string? CounterpartyNameEncrypted { get; set; }
+    public string? AmountEncrypted { get; set; }
+    public string? CategoryEncrypted { get; set; }
+    
     public FinancialAccount Account { get; set; } = null!;
 }
