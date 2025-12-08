@@ -28,14 +28,13 @@ jobs:
       - name: Build new image
         run: |
           echo "🔨 Building new Docker image..."
-          docker-compose build --no-cache web
+          docker-compose -p bankweave-prod build --no-cache web
       
       - name: Start new container on temporary port
         run: |
           echo "🚀 Starting new container on port 8084..."
           # Create temporary docker-compose override
           cat > docker-compose.temp.yml << 'TEMPEOF'
-          version: '3.9'
           services:
             web:
               container_name: bankweave-web-temp
@@ -43,7 +42,7 @@ jobs:
                 - "8084:8080"
           TEMPEOF
           
-          docker-compose -f docker-compose.yml -f docker-compose.temp.yml up -d web
+          docker-compose -p bankweave-temp -f docker-compose.yml -f docker-compose.temp.yml up -d web
       
       - name: Wait and health check new container
         run: |
@@ -56,7 +55,7 @@ jobs:
             if [ $i -eq 60 ]; then
               echo "❌ New container health check failed"
               docker logs bankweave-web-temp
-              docker-compose -f docker-compose.yml -f docker-compose.temp.yml down
+              docker-compose -p bankweave-temp -f docker-compose.yml -f docker-compose.temp.yml down
               exit 1
             fi
             echo "⏳ Waiting for new container... ($i/60)"
@@ -73,7 +72,7 @@ jobs:
           else
             echo "❌ New container returned unexpected status: HTTP $HTTP_STATUS"
             docker logs bankweave-web-temp
-            docker-compose -f docker-compose.yml -f docker-compose.temp.yml down
+            docker-compose -p bankweave-temp -f docker-compose.yml -f docker-compose.temp.yml down
             exit 1
           fi
       
@@ -107,7 +106,7 @@ jobs:
             echo "Rolling back..."
             sudo cp /etc/nginx/sites-available/bankweave.conf.backup /etc/nginx/sites-available/bankweave.conf
             sudo systemctl reload nginx
-            docker-compose -f docker-compose.yml -f docker-compose.temp.yml down
+            docker-compose -p bankweave-temp -f docker-compose.yml -f docker-compose.temp.yml down
             exit 1
           fi
       
@@ -123,9 +122,12 @@ jobs:
           docker stop bankweave-web-temp
           docker rename bankweave-web-temp bankweave-web-prod
           
+          # Clean up temp compose project
+          docker-compose -p bankweave-temp -f docker-compose.yml -f docker-compose.temp.yml down || true
+          
           # Restart with production name and port
-          docker-compose down
-          docker-compose up -d
+          docker-compose -p bankweave-prod down || true
+          docker-compose -p bankweave-prod up -d
       
       - name: Final health check
         run: |
@@ -138,7 +140,7 @@ jobs:
             fi
             if [ $i -eq 30 ]; then
               echo "❌ Production container health check failed"
-              docker-compose logs web
+              docker-compose -p bankweave-prod logs web
               exit 1
             fi
             echo "⏳ Waiting... ($i/30)"
@@ -166,7 +168,7 @@ jobs:
           echo "URL: https://bankweave.step0fail.com"
           echo ""
           echo "Containers running:"
-          docker-compose ps --format "table {{.Name}}\t{{.Status}}"
+          docker-compose -p bankweave-prod ps --format "table {{.Name}}\t{{.Status}}"
           echo ""
           echo "Deployment completed with ZERO downtime! 🚀"
           echo "=========================================="
