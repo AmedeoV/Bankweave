@@ -1304,7 +1304,7 @@
         // ===== SCENARIO MANAGEMENT =====
 
         // Show save scenario modal
-        function showSaveScenarioModal() {
+        async function showSaveScenarioModal() {
             // Update the summary in the modal
             const dateRangeText = customDateRange 
                 ? `${customDateRange.start.toLocaleDateString()} - ${customDateRange.end.toLocaleDateString()}`
@@ -1324,7 +1324,7 @@
                 document.getElementById('updateScenarioBtn').style.display = 'inline-block';
                 
                 // Load the existing description if available
-                const scenarios = getSavedScenarios();
+                const scenarios = await getSavedScenarios();
                 const existingScenario = scenarios.find(s => s.id === currentScenarioId);
                 if (existingScenario) {
                     document.getElementById('scenarioDescription').value = existingScenario.description || '';
@@ -1390,7 +1390,7 @@
             };
 
             try {
-                const response = await fetch('/api/scenarios', {
+                const response = await Auth.fetchWithAuth('/api/scenarios', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(scenario)
@@ -1464,7 +1464,7 @@
             };
 
             try {
-                const response = await fetch(`/api/scenarios/${currentScenarioId}`, {
+                const response = await Auth.fetchWithAuth(`/api/scenarios/${currentScenarioId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(scenario)
@@ -1491,7 +1491,7 @@
         // Get saved scenarios
         async function getSavedScenarios() {
             try {
-                const response = await fetch('/api/scenarios');
+                const response = await Auth.fetchWithAuth('/api/scenarios');
                 if (!response.ok) {
                     console.error('Error fetching scenarios');
                     return [];
@@ -1649,7 +1649,7 @@
 
             if (confirm(`Are you sure you want to delete "${scenario.name}"?`)) {
                 try {
-                    const response = await fetch(`/api/scenarios/${scenarioId}`, {
+                    const response = await Auth.fetchWithAuth(`/api/scenarios/${scenarioId}`, {
                         method: 'DELETE'
                     });
 

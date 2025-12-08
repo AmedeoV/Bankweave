@@ -1,12 +1,16 @@
 using Bankweave.Infrastructure;
 using Bankweave.Entities;
+using Bankweave.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace Bankweave.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class ScenariosController : ControllerBase
 {
     private readonly AppDbContext _dbContext;
@@ -61,27 +65,47 @@ public class ScenariosController : ControllerBase
 
     // POST: api/scenarios
     [HttpPost]
-    public async Task<IActionResult> CreateScenario([FromBody] WhatIfScenario scenario)
+    public async Task<IActionResult> CreateScenario([FromBody] CreateScenarioDto dto)
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(scenario.Name))
+            if (string.IsNullOrWhiteSpace(dto.Name))
             {
                 return BadRequest("Scenario name is required");
             }
 
-            // Check for duplicate name
+            // Get current user ID
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized();
+            }
+
+            // Check for duplicate name for this user
             var existingScenario = await _dbContext.WhatIfScenarios
-                .FirstOrDefaultAsync(s => s.Name == scenario.Name);
+                .FirstOrDefaultAsync(s => s.Name == dto.Name && s.UserId == userId);
             
             if (existingScenario != null)
             {
                 return Conflict("A scenario with this name already exists");
             }
 
-            scenario.Id = Guid.NewGuid();
-            scenario.CreatedAt = DateTime.UtcNow;
-            scenario.UpdatedAt = DateTime.UtcNow;
+            var scenario = new WhatIfScenario
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                Name = dto.Name,
+                Description = dto.Description,
+                SavedDate = dto.SavedDate,
+                DateRangeStart = dto.DateRangeStart,
+                DateRangeEnd = dto.DateRangeEnd,
+                Days = dto.Days,
+                CustomTransactionsJson = dto.CustomTransactionsJson,
+                DisabledTransactionsJson = dto.DisabledTransactionsJson,
+                StatsJson = dto.StatsJson,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
 
             _dbContext.WhatIfScenarios.Add(scenario);
             await _dbContext.SaveChangesAsync();
