@@ -1973,24 +1973,16 @@
 
         async function loadRecentTransactions(filter = currentTransactionFilter) {
             try {
-                const accountsResponse = await Auth.fetchWithAuth('/api/accounts');
-                const accounts = await accountsResponse.json();
+                // Load transactions using encrypted API
+                allLoadedTransactions = await fetchAndDecryptTransactions();
                 
-                if (accounts.length === 0) {
+                if (allLoadedTransactions.length === 0) {
                     document.getElementById('transactionsList').innerHTML = `
                         <div class="empty-state">
                             <p>No transactions yet</p>
                         </div>
                     `;
                     return;
-                }
-                
-                // Get transactions from all accounts
-                allLoadedTransactions = [];
-                for (const account of accounts) {
-                    const response = await Auth.fetchWithAuth(`/api/accounts/${account.id}/transactions?pageSize=10000`);
-                    const data = await response.json();
-                    allLoadedTransactions = allLoadedTransactions.concat(data.transactions);
                 }
                 
                 // Sort by date descending
@@ -2311,14 +2303,10 @@
             
             try {
                 if (mode === 'single') {
-                    // Update single transaction
-                    const response = await Auth.fetchWithAuth(`/api/accounts/transactions/${transactionId}/toggle-essential`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ isEssential: !currentValue })
-                    });
+                    // Update single transaction using encrypted helper
+                    const success = await toggleTransactionEssential(transactionId, !currentValue);
                     
-                    if (response.ok) {
+                    if (success) {
                         await loadRecentTransactions();
                         await loadOverview();
                         await loadEssentialExpenses();
@@ -3198,13 +3186,10 @@
         // Update category
         async function updateSingleTransactionCategory(transactionId, category) {
             try {
-                const response = await Auth.fetchWithAuth(`/api/accounts/transactions/${transactionId}/category/single`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ category })
-                });
+                // Use the encrypted transaction helper
+                const success = await updateTransactionCategory(transactionId, category, 'single');
 
-                if (response.ok) {
+                if (success) {
                     // Update the badge immediately for visual feedback
                     const badge = document.querySelector(`[data-transaction-id="${transactionId}"] .category-badge`);
                     if (badge) {
@@ -3487,6 +3472,161 @@
             if (tabName === 'rules') {
                 loadRules();
             }
+        }
+
+        // Encryption helper functions for transactions
+        async function fetchAndDecryptTransactions() {
+            if (!window.cryptoManager.isInitialized) {
+                console.warn('Encryption not initialized, falling back to legacy API');
+                return await fetchLegacyTransactions();
+            }
+
+            try {
+                const response = await Auth.fetchWithAuth('/api/encryptedtransactions');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch encrypted transactions');
+                }
+                
+                const encryptedTransactions = await response.json();
+                const decryptedTransactions = [];
+                
+                for (const txn of encryptedTransactions) {
+                    try {
+                        const decrypted = {
+                            id: txn.id,
+                            accountId: txn.financialAccountId,
+                            accountName: txn.accountName,
+                            accountProvider: txn.accountProvider,
+                            transactionId: txn.transactionId,
+                            externalId: txn.externalId,
+                            date: txn.transactionDate,
+                            bookingDate: txn.bookingDate,
+                            currencyCode: txn.currencyCode,
+                            isEssentialExpense: txn.isEssentialExpense,
+                            createdAt: txn.createdAt
+                        };
+                        
+                        // Decrypt sensitive fields if they exist
+                        if (txn.descriptionEncrypted) {
+                            decrypted.description = await window.cryptoManager.decrypt(txn.descriptionEncrypted);
+                        }
+                        if (txn.counterpartyNameEncrypted) {
+                            decrypted.counterpartyName = await window.cryptoManager.decrypt(txn.counterpartyNameEncrypted);
+                        }
+                        if (txn.amountEncrypted) {
+                            const amountStr = await window.cryptoManager.decrypt(txn.amountEncrypted);
+                            decrypted.amount = parseFloat(amountStr);
+                        }
+                        if (txn.categoryEncrypted) {
+                            decrypted.category = await window.cryptoManager.decrypt(txn.categoryEncrypted);
+                        }
+                        
+                        decryptedTransactions.push(decrypted);
+                    } catch (decryptError) {
+                        console.error('Failed to decrypt transaction:', txn.id, decryptError);
+                    }
+                }
+                
+                return decryptedTransactions;
+            } catch (error) {
+                console.error('Error fetching encrypted transactions:', error);
+                return await fetchLegacyTransactions();
+            }
+        }
+
+        async function fetchLegacyTransactions() {
+            const accountsResponse = await Auth.fetchWithAuth('/api/accounts');
+            const accounts = await accountsResponse.json();
+            
+            if (accounts.length === 0) {
+                return [];
+            }
+            
+            let allTransactions = [];
+            for (const account of accounts) {
+                const response = await Auth.fetchWithAuth(`/api/accounts/${account.id}/transactions?pageSize=10000`);
+                const data = await response.json();
+                allTransactions = allTransactions.concat(data.transactions);
+            }
+            
+            return allTransactions;
+        }
+
+        async function updateTransactionCategory(transactionId, newCategory, updateType = 'single') {
+            if (!window.cryptoManager.isInitialized) {
+                // Fall back to legacy API
+                return await updateTransactionCategoryLegacy(transactionId, newCategory, updateType);
+            }
+
+            try {
+                const categoryEncrypted = await window.cryptoManager.encrypt(newCategory);
+                
+                const response = await Auth.fetchWithAuth(`/api/encryptedtransactions/${transactionId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        categoryEncrypted: categoryEncrypted,
+                        isEssentialExpense: false
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to update transaction');
+                }
+                
+                return true;
+            } catch (error) {
+                console.error('Error updating transaction:', error);
+                return await updateTransactionCategoryLegacy(transactionId, newCategory, updateType);
+            }
+        }
+
+        async function updateTransactionCategoryLegacy(transactionId, newCategory, updateType) {
+            const txn = allLoadedTransactions.find(t => t.id === transactionId);
+            if (!txn) return false;
+            
+            const response = await Auth.fetchWithAuth(`/api/accounts/${txn.accountId}/transactions/${transactionId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ category: newCategory })
+            });
+            
+            return response.ok;
+        }
+
+        async function toggleTransactionEssential(transactionId, isEssential) {
+            if (!window.cryptoManager.isInitialized) {
+                // Fall back to legacy API
+                return await toggleTransactionEssentialLegacy(transactionId, isEssential);
+            }
+
+            try {
+                const response = await Auth.fetchWithAuth(`/api/encryptedtransactions/${transactionId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        isEssentialExpense: isEssential
+                    })
+                });
+                
+                return response.ok;
+            } catch (error) {
+                console.error('Error toggling essential:', error);
+                return await toggleTransactionEssentialLegacy(transactionId, isEssential);
+            }
+        }
+
+        async function toggleTransactionEssentialLegacy(transactionId, isEssential) {
+            const txn = allLoadedTransactions.find(t => t.id === transactionId);
+            if (!txn) return false;
+            
+            const response = await Auth.fetchWithAuth(`/api/accounts/${txn.accountId}/transactions/${transactionId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ isEssentialExpense: isEssential })
+            });
+            
+            return response.ok;
         }
 
         // Load all data
