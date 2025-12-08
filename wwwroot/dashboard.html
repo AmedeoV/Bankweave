@@ -3633,12 +3633,19 @@
         async function loadData() {
             // Try to restore encryption from session
             if (!window.cryptoManager.isInitialized) {
+                console.log('Attempting to restore encryption from session...');
+                const keyInSession = sessionStorage.getItem('_ek');
+                const saltInSession = sessionStorage.getItem('_es');
+                console.log('Session has key:', !!keyInSession, 'Session has salt:', !!saltInSession);
+                
                 const restored = await window.cryptoManager.restoreKeyFromSession();
                 if (!restored) {
                     const encryptionSalt = localStorage.getItem('encryptionSalt');
                     if (encryptionSalt) {
                         console.log('Encryption not initialized and could not be restored. Will use legacy API until next login.');
                     }
+                } else {
+                    console.log('Successfully restored encryption from session!');
                 }
             }
             

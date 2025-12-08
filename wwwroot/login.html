@@ -249,6 +249,10 @@
                         await window.cryptoManager.initialize(password, data.encryptionSalt);
                         localStorage.setItem('encryptionSalt', data.encryptionSalt);
                         console.log('Encryption initialized successfully');
+                        
+                        // Verify key was saved to session
+                        const keyInSession = sessionStorage.getItem('_ek');
+                        console.log('Encryption key saved to session:', !!keyInSession);
                     } catch (error) {
                         console.error('Failed to initialize encryption:', error);
                         errorMessage.textContent = 'Failed to initialize encryption. Please try again.';
@@ -258,6 +262,9 @@
                         return;
                     }
                 }
+                
+                // Small delay to ensure sessionStorage is persisted
+                await new Promise(resolve => setTimeout(resolve, 100));
                 
                 // Redirect to dashboard
                 window.location.href = '/dashboard.html';
