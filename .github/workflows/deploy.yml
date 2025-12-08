@@ -36,13 +36,19 @@ jobs:
           # Create temporary docker-compose override
           cat > docker-compose.temp.yml << 'TEMPEOF'
           services:
+            postgres:
+              external_links:
+                - bankweave-postgres-prod:postgres
             web:
               container_name: bankweave-web-temp
               ports:
                 - "8084:8080"
+              network_mode: "bankweave-prod_bankweave-network-prod"
+              depends_on: []
           TEMPEOF
           
-          docker-compose -p bankweave-temp -f docker-compose.yml -f docker-compose.temp.yml up -d web
+          # Start only the web service, connecting to existing prod postgres
+          docker-compose -p bankweave-temp -f docker-compose.yml -f docker-compose.temp.yml up -d --no-deps web
       
       - name: Wait and health check new container
         run: |
