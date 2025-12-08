@@ -32,7 +32,7 @@ class CryptoManager {
             },
             keyMaterial,
             { name: 'AES-GCM', length: 256 },
-            false,
+            true, // Make key extractable so we can save to sessionStorage
             ['encrypt', 'decrypt']
         );
 
@@ -93,7 +93,7 @@ class CryptoManager {
                 'raw',
                 keyArray,
                 { name: 'AES-GCM', length: 256 },
-                false,
+                true, // Keep extractable for potential re-export
                 ['encrypt', 'decrypt']
             );
             
