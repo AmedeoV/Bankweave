@@ -219,38 +219,48 @@
                     body: JSON.stringify({ email, password })
                 });
 
+                if (!response.ok) {
+                    // Try to get error message from response
+                    let errorMsg = 'Login failed. Please try again.';
+                    try {
+                        const errorData = await response.json();
+                        errorMsg = errorData.message || errorMsg;
+                    } catch (parseError) {
+                        // If response is not JSON, show status
+                        errorMsg = `Server error (${response.status}). Please try again later.`;
+                        console.error('Server returned non-JSON response:', response.status, response.statusText);
+                    }
+                    errorMessage.textContent = errorMsg;
+                    errorMessage.classList.add('show');
+                    return;
+                }
+
                 const data = await response.json();
 
-                if (response.ok) {
-                    // Store token and user info
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('userEmail', data.email);
-                    if (data.firstName) localStorage.setItem('userFirstName', data.firstName);
-                    if (data.lastName) localStorage.setItem('userLastName', data.lastName);
-                    
-                    // Initialize encryption with user's password and salt
-                    if (data.encryptionSalt) {
-                        try {
-                            await window.cryptoManager.initialize(password, data.encryptionSalt);
-                            localStorage.setItem('encryptionSalt', data.encryptionSalt);
-                            console.log('Encryption initialized successfully');
-                        } catch (error) {
-                            console.error('Failed to initialize encryption:', error);
-                            errorMessage.textContent = 'Failed to initialize encryption. Please try again.';
-                            errorMessage.classList.add('show');
-                            loginBtn.disabled = false;
-                            loginBtn.innerHTML = 'Sign In';
-                            return;
-                        }
+                // Store token and user info
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('userEmail', data.email);
+                if (data.firstName) localStorage.setItem('userFirstName', data.firstName);
+                if (data.lastName) localStorage.setItem('userLastName', data.lastName);
+                
+                // Initialize encryption with user's password and salt
+                if (data.encryptionSalt) {
+                    try {
+                        await window.cryptoManager.initialize(password, data.encryptionSalt);
+                        localStorage.setItem('encryptionSalt', data.encryptionSalt);
+                        console.log('Encryption initialized successfully');
+                    } catch (error) {
+                        console.error('Failed to initialize encryption:', error);
+                        errorMessage.textContent = 'Failed to initialize encryption. Please try again.';
+                        errorMessage.classList.add('show');
+                        loginBtn.disabled = false;
+                        loginBtn.innerHTML = 'Sign In';
+                        return;
                     }
-                    
-                    // Redirect to dashboard
-                    window.location.href = '/dashboard.html';
-                } else {
-                    // Show error message
-                    errorMessage.textContent = data.message || 'Login failed. Please try again.';
-                    errorMessage.classList.add('show');
                 }
+                
+                // Redirect to dashboard
+                window.location.href = '/dashboard.html';
             } catch (error) {
                 console.error('Login error:', error);
                 errorMessage.textContent = 'An error occurred. Please try again.';
