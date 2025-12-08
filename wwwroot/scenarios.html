@@ -903,7 +903,7 @@
             customDateRange = { start, end };
             
             try {
-                const response = await fetch(`${API_BASE}/accounts/transactions`);
+                const response = await Auth.fetchWithAuth(`${API_BASE}/accounts/transactions`);
                 if (!response.ok) throw new Error('Failed to fetch transactions');
                 
                 const data = await response.json();
@@ -933,7 +933,7 @@
         // Load transactions
         async function loadTransactions() {
             try {
-                const response = await fetch(`${API_BASE}/accounts/transactions`);
+                const response = await Auth.fetchWithAuth(`${API_BASE}/accounts/transactions`);
                 if (!response.ok) throw new Error('Failed to fetch transactions');
                 
                 const data = await response.json();
