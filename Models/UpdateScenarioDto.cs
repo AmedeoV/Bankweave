@@ -1,0 +1,14 @@
+namespace Bankweave.Models;
+
+public class UpdateScenarioDto
+{
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public DateTime SavedDate { get; set; }
+    public DateTime? DateRangeStart { get; set; }
+    public DateTime? DateRangeEnd { get; set; }
+    public int? Days { get; set; }
+    public string CustomTransactionsJson { get; set; } = "[]";
+    public string DisabledTransactionsJson { get; set; } = "[]";
+    public string StatsJson { get; set; } = "{}";
+}

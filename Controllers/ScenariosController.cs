@@ -28,7 +28,15 @@ public class ScenariosController : ControllerBase
     {
         try
         {
+            // Get current user ID
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized();
+            }
+
             var scenarios = await _dbContext.WhatIfScenarios
+                .Where(s => s.UserId == userId)
                 .OrderByDescending(s => s.SavedDate)
                 .ToListAsync();
             
@@ -52,6 +60,19 @@ public class ScenariosController : ControllerBase
             if (scenario == null)
             {
                 return NotFound($"Scenario with ID {id} not found");
+            }
+
+            // Get current user ID
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized();
+            }
+
+            // Verify the scenario belongs to the current user
+            if (scenario.UserId != userId)
+            {
+                return Forbid();
             }
             
             return Ok(scenario);
@@ -121,15 +142,10 @@ public class ScenariosController : ControllerBase
 
     // PUT: api/scenarios/{id}
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateScenario(Guid id, [FromBody] WhatIfScenario scenario)
+    public async Task<IActionResult> UpdateScenario(Guid id, [FromBody] UpdateScenarioDto dto)
     {
         try
         {
-            if (id != scenario.Id)
-            {
-                return BadRequest("ID mismatch");
-            }
-
             var existingScenario = await _dbContext.WhatIfScenarios.FindAsync(id);
             
             if (existingScenario == null)
@@ -137,24 +153,37 @@ public class ScenariosController : ControllerBase
                 return NotFound($"Scenario with ID {id} not found");
             }
 
+            // Get current user ID
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized();
+            }
+
+            // Verify the scenario belongs to the current user
+            if (existingScenario.UserId != userId)
+            {
+                return Forbid();
+            }
+
             // Check for duplicate name (excluding current scenario)
             var duplicateName = await _dbContext.WhatIfScenarios
-                .AnyAsync(s => s.Name == scenario.Name && s.Id != id);
+                .AnyAsync(s => s.Name == dto.Name && s.Id != id && s.UserId == userId);
             
             if (duplicateName)
             {
                 return Conflict("A scenario with this name already exists");
             }
 
-            existingScenario.Name = scenario.Name;
-            existingScenario.Description = scenario.Description;
-            existingScenario.SavedDate = scenario.SavedDate;
-            existingScenario.DateRangeStart = scenario.DateRangeStart;
-            existingScenario.DateRangeEnd = scenario.DateRangeEnd;
-            existingScenario.Days = scenario.Days;
-            existingScenario.CustomTransactionsJson = scenario.CustomTransactionsJson;
-            existingScenario.DisabledTransactionsJson = scenario.DisabledTransactionsJson;
-            existingScenario.StatsJson = scenario.StatsJson;
+            existingScenario.Name = dto.Name;
+            existingScenario.Description = dto.Description;
+            existingScenario.SavedDate = dto.SavedDate;
+            existingScenario.DateRangeStart = dto.DateRangeStart;
+            existingScenario.DateRangeEnd = dto.DateRangeEnd;
+            existingScenario.Days = dto.Days;
+            existingScenario.CustomTransactionsJson = dto.CustomTransactionsJson;
+            existingScenario.DisabledTransactionsJson = dto.DisabledTransactionsJson;
+            existingScenario.StatsJson = dto.StatsJson;
             existingScenario.UpdatedAt = DateTime.UtcNow;
 
             await _dbContext.SaveChangesAsync();
@@ -179,6 +208,19 @@ public class ScenariosController : ControllerBase
             if (scenario == null)
             {
                 return NotFound($"Scenario with ID {id} not found");
+            }
+
+            // Get current user ID
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized();
+            }
+
+            // Verify the scenario belongs to the current user
+            if (scenario.UserId != userId)
+            {
+                return Forbid();
             }
 
             _dbContext.WhatIfScenarios.Remove(scenario);
