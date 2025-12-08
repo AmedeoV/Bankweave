@@ -98,8 +98,8 @@ jobs:
           echo "🌐 Verifying production traffic..."
           sleep 3
           
-          # Test through nginx
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:443 -k || echo "000")
+          # Test through nginx (HTTP on port 80)
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:80 || echo "000")
           if [ "$HTTP_STATUS" -eq 200 ] || [ "$HTTP_STATUS" -eq 302 ]; then
             echo "✅ Production traffic working (HTTP $HTTP_STATUS)"
           else
