@@ -679,22 +679,33 @@ public class AccountsController : ControllerBase
     [HttpPost("recategorize-all")]
     public async Task<IActionResult> RecategorizeAllTransactions()
     {
-        var transactions = await _dbContext.MoneyMovements.ToListAsync();
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var transactions = await _dbContext.MoneyMovements
+            .Where(m => m.Account.UserId == userId)
+            .ToListAsync();
         var updated = 0;
 
         foreach (var transaction in transactions)
         {
-            // Only recategorize if the transaction has no category or is set to "Other"
-            if (string.IsNullOrEmpty(transaction.Category) || transaction.Category == "Other")
+            // Re-categorize if: no category, "Other", generic "Income", or generic categories
+            var shouldRecategorize = string.IsNullOrEmpty(transaction.Category) || 
+                                    transaction.Category == "Other" ||
+                                    transaction.Category == "Income" ||
+                                    transaction.Category == "Expenses" ||
+                                    transaction.Category == "Large Expense";
+
+            if (shouldRecategorize)
             {
-                var newCategory = _categorizationService.CategorizeTransaction(
-                    transaction.Description,
+                var (newCategory, markAsEssential) = await _categorizationService.CategorizeTransactionWithDetailsAsync(
+                    userId,
+                    transaction.Description ?? "",
                     transaction.CounterpartyName,
                     transaction.Amount);
 
                 if (transaction.Category != newCategory)
                 {
                     transaction.Category = newCategory;
+                    transaction.IsEssentialExpense = markAsEssential;
                     updated++;
                 }
             }
@@ -702,7 +713,7 @@ public class AccountsController : ControllerBase
 
         await _dbContext.SaveChangesAsync();
 
-        _logger.LogInformation("Re-categorized {Count} transactions", updated);
+        _logger.LogInformation("Re-categorized {Count} transactions for user {UserId}", updated, userId);
 
         return Ok(new 
         { 
