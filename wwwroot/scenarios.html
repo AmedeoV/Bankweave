@@ -1,0 +1,1722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What-If Scenarios - Bankweave</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="/auth.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0a1628 0%, #0f2744 50%, #1a3a52 100%);
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px 30px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header h1 {
+            background: linear-gradient(135deg, #06b6d4 0%, #14b8a6 50%, #10b981 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 28px;
+            margin-bottom: 5px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header p {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            background: linear-gradient(135deg, #06b6d4 0%, #14b8a6 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+            box-shadow: 0 4px 15px rgba(100, 116, 139, 0.3);
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .section h2 {
+            color: white;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .stat-value.positive {
+            color: #10b981;
+        }
+
+        .stat-value.negative {
+            color: #ef4444;
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .category-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .category-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateX(5px);
+        }
+
+        .category-info {
+            flex: 1;
+        }
+
+        .category-name {
+            color: white;
+            font-weight: 600;
+            font-size: 15px;
+            margin-bottom: 5px;
+        }
+
+        .category-count {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+        }
+
+        .category-amount {
+            color: white;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .transaction-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .transaction-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateX(3px);
+        }
+
+        .transaction-item.disabled {
+            opacity: 0.4;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .transaction-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .transaction-description {
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .transaction-details {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+        }
+
+        .transaction-amount {
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+            white-space: nowrap;
+        }
+
+        .transaction-amount.positive {
+            color: #10b981;
+        }
+
+        .transaction-amount.negative {
+            color: #ef4444;
+        }
+
+        .toggle-badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .toggle-badge.essential {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+        }
+
+        .toggle-badge.non-essential {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+        }
+
+        .period-selector {
+            display: flex;
+            gap: 5px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px;
+            border-radius: 10px;
+        }
+
+        .period-btn {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .period-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .period-btn.active {
+            background: linear-gradient(135deg, #06b6d4 0%, #14b8a6 100%);
+            color: white;
+        }
+
+        .custom-date-picker {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .custom-date-picker label {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .custom-date-picker input[type="date"] {
+            padding: 8px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .custom-date-picker input[type="date"]:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .custom-date-picker input[type="date"]:focus {
+            outline: none;
+            border-color: #06b6d4;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .custom-date-picker input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            cursor: pointer;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #0f2744 0%, #1a3a52 100%);
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .modal-title {
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .close-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(90deg);
+        }
+
+        .loading {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            padding: 40px;
+            font-size: 14px;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            padding: 40px;
+            font-size: 14px;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .comparison-mode {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .comparison-mode h3 {
+            color: white;
+            font-size: 16px;
+            margin: 0;
+        }
+
+        .comparison-mode p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 13px;
+            margin: 5px 0 0 0;
+        }
+
+        .scenario-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .scenario-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateX(3px);
+            border-color: rgba(99, 102, 241, 0.5);
+        }
+
+        .scenario-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .scenario-card-title {
+            color: white;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .scenario-card-date {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+        }
+
+        .scenario-card-description {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .scenario-card-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .scenario-card-stat {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .scenario-card-stat-label {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 11px;
+            margin-bottom: 3px;
+        }
+
+        .scenario-card-stat-value {
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .scenario-card-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .scenario-card-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .scenario-card-btn.load {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .scenario-card-btn.delete {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+        }
+
+        .scenario-card-btn:hover {
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" style="width: 36px; height: 36px;">
+                        <defs>
+                            <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#06b6d4;stop-opacity:1" />
+                                <stop offset="50%" style="stop-color:#14b8a6;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#10b981;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <rect width="100" height="100" rx="20" fill="url(#logoGrad)"/>
+                        <path d="M30 40 L30 70 L45 70 L45 50 L55 50 L55 70 L70 70 L70 40 L50 25 Z" fill="white" opacity="0.9"/>
+                        <circle cx="50" cy="60" r="8" fill="white"/>
+                        <text x="50" y="66" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="url(#logoGrad)" text-anchor="middle">€</text>
+                    </svg>
+                    <span>What-If Scenarios</span>
+                </h1>
+                <p>Click transactions to toggle them on/off and see the impact</p>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="btn" onclick="showSaveScenarioModal()">💾 Save Scenario</button>
+                <button class="btn" onclick="showLoadScenariosModal()">📂 Load Scenario</button>
+                <button class="btn btn-secondary" onclick="resetAllToggles()">🔄 Reset All</button>
+                <button class="btn btn-secondary" onclick="window.location.href='/'">← Back to Dashboard</button>
+            </div>
+        </div>
+
+        <div class="comparison-mode">
+            <div style="flex: 1;">
+                <h3 id="scenarioTitle">💡 Simulation Mode Active</h3>
+                <p>Click on any transaction to enable/disable it and see how it affects your finances</p>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button class="btn" style="background: rgba(255, 255, 255, 0.2); box-shadow: none;" onclick="showSaveScenarioModal()">💾 Save</button>
+                <button class="btn" style="background: rgba(255, 255, 255, 0.2); box-shadow: none;" onclick="showLoadScenariosModal()">📂 Load</button>
+            </div>
+        </div>
+
+        <!-- Date Range Filter -->
+        <div class="section">
+            <div class="section-header" style="display: block;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 15px;">
+                    <h2>📅 Date Range</h2>
+                    <div class="period-selector">
+                        <button class="period-btn active" onclick="setDateRange(30, this)">30 Days</button>
+                        <button class="period-btn" onclick="setDateRange(90, this)">90 Days</button>
+                        <button class="period-btn" onclick="setDateRange(180, this)">6 Months</button>
+                        <button class="period-btn" onclick="setDateRange(365, this)">1 Year</button>
+                        <button class="period-btn" onclick="setCustomDateRange(this)">Custom</button>
+                    </div>
+                </div>
+                <div class="custom-date-picker" id="customDatePicker" style="display: none;">
+                    <label for="startDate">From:</label>
+                    <input type="date" id="startDate" />
+                    <label for="endDate">To:</label>
+                    <input type="date" id="endDate" />
+                    <button class="btn" onclick="applyCustomDateRange()">Apply</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Income</div>
+                <div class="stat-value positive" id="stat-income">€0.00</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Essential Expenses</div>
+                <div class="stat-value negative" id="stat-essential">€0.00</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Non-Essential</div>
+                <div class="stat-value negative" id="stat-nonessential">€0.00</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Expenses</div>
+                <div class="stat-value negative" id="stat-expenses">€0.00</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Net Cash Flow</div>
+                <div class="stat-value" id="stat-net">€0.00</div>
+            </div>
+        </div>
+
+        <!-- Income Section -->
+        <div class="section">
+            <div class="section-header">
+                <h2>💰 Income Sources</h2>
+                <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                    <div style="color: rgba(255, 255, 255, 0.6); font-size: 13px;">
+                        <span id="income-count">0</span> transactions • <span id="income-disabled">0</span> disabled
+                    </div>
+                    <button class="btn" onclick="showAddIncomeModal()">➕ Add Income</button>
+                </div>
+            </div>
+            <div id="income-categories" class="category-grid">
+                <div class="loading">Loading income sources...</div>
+            </div>
+        </div>
+
+        <!-- Essential Expenses Section -->
+        <div class="section">
+            <div class="section-header">
+                <h2>🏠 Essential Expenses</h2>
+                <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                    <div style="color: rgba(255, 255, 255, 0.6); font-size: 13px;">
+                        <span id="essential-count">0</span> transactions • <span id="essential-disabled">0</span> disabled
+                    </div>
+                    <button class="btn" onclick="showAddExpenseModal(true)">➕ Add Essential</button>
+                </div>
+            </div>
+            <div id="essential-categories" class="category-grid">
+                <div class="loading">Loading essential expenses...</div>
+            </div>
+        </div>
+
+        <!-- Non-Essential Expenses Section -->
+        <div class="section">
+            <div class="section-header">
+                <h2>🎉 Non-Essential Expenses</h2>
+                <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                    <div style="color: rgba(255, 255, 255, 0.6); font-size: 13px;">
+                        <span id="nonessential-count">0</span> transactions • <span id="nonessential-disabled">0</span> disabled
+                    </div>
+                    <button class="btn" onclick="showAddExpenseModal(false)">➕ Add Non-Essential</button>
+                    <button class="btn btn-secondary" onclick="toggleAllNonEssential()" id="toggleNonEssentialBtn">
+                        Disable All Non-Essential
+                    </button>
+                </div>
+            </div>
+            <div id="nonessential-categories" class="category-grid">
+                <div class="loading">Loading non-essential expenses...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transaction Details Modal -->
+    <div id="transactionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Transactions</h3>
+                <button class="close-btn" onclick="closeModal()">×</button>
+            </div>
+            <div id="modalTransactions"></div>
+        </div>
+    </div>
+
+    <!-- Add Transaction Modal -->
+    <div id="addTransactionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="addModalTitle">Add Transaction</h3>
+                <button class="close-btn" onclick="closeAddModal()">×</button>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <div>
+                    <label style="color: rgba(255, 255, 255, 0.8); font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">
+                        Description
+                    </label>
+                    <input type="text" id="addDescription" 
+                           placeholder="e.g., Freelance Work, New Subscription" 
+                           style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; background: rgba(255, 255, 255, 0.05); color: white; font-size: 14px;" />
+                </div>
+                <div>
+                    <label style="color: rgba(255, 255, 255, 0.8); font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">
+                        Amount (€)
+                    </label>
+                    <input type="number" id="addAmount" 
+                           placeholder="0.00" 
+                           step="0.01" 
+                           min="0"
+                           style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; background: rgba(255, 255, 255, 0.05); color: white; font-size: 14px;" />
+                </div>
+                <div>
+                    <label style="color: rgba(255, 255, 255, 0.8); font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">
+                        Category
+                    </label>
+                    <input type="text" id="addCategory" 
+                           placeholder="e.g., Salary, Entertainment, Utilities" 
+                           style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; background: rgba(255, 255, 255, 0.05); color: white; font-size: 14px;" />
+                </div>
+                <div>
+                    <label style="color: rgba(255, 255, 255, 0.8); font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">
+                        Frequency
+                    </label>
+                    <select id="addFrequency" 
+                            style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; background: rgba(255, 255, 255, 0.05); color: white; font-size: 14px;">
+                        <option value="once">One-time</option>
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly" selected>Monthly</option>
+                        <option value="yearly">Yearly</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
+                    <button class="btn btn-secondary" onclick="closeAddModal()">Cancel</button>
+                    <button class="btn" onclick="addCustomTransaction()">Add Transaction</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Save Scenario Modal -->
+    <div id="saveScenarioModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">💾 Save Scenario</h3>
+                <button class="close-btn" onclick="closeSaveScenarioModal()">×</button>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <div>
+                    <label style="color: rgba(255, 255, 255, 0.8); font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">
+                        Scenario Name
+                    </label>
+                    <input type="text" id="scenarioName" 
+                           placeholder="e.g., Job Loss Scenario, Reduced Spending" 
+                           style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; background: rgba(255, 255, 255, 0.05); color: white; font-size: 14px;" />
+                </div>
+                <div>
+                    <label style="color: rgba(255, 255, 255, 0.8); font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">
+                        Description (optional)
+                    </label>
+                    <textarea id="scenarioDescription" 
+                              placeholder="Add notes about this scenario..."
+                              style="width: 100%; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; background: rgba(255, 255, 255, 0.05); color: white; font-size: 14px; resize: vertical; min-height: 80px;"></textarea>
+                </div>
+                <div style="background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                    <div style="color: rgba(255, 255, 255, 0.6); font-size: 12px; margin-bottom: 10px;">This scenario will save:</div>
+                    <div style="color: rgba(255, 255, 255, 0.8); font-size: 13px;">
+                        <div style="margin-bottom: 5px;">📅 Date Range: <span id="saveDateRange"></span></div>
+                        <div style="margin-bottom: 5px;">➕ Custom Transactions: <span id="saveCustomCount">0</span></div>
+                        <div>🔀 Disabled Transactions: <span id="saveDisabledCount">0</span></div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
+                    <button class="btn btn-secondary" onclick="closeSaveScenarioModal()">Cancel</button>
+                    <button class="btn" id="saveScenarioBtn" onclick="saveScenario()">💾 Save Scenario</button>
+                    <button class="btn" id="updateScenarioBtn" onclick="updateScenario()" style="display: none; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">✏️ Update Scenario</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Scenarios Modal -->
+    <div id="loadScenariosModal" class="modal">
+        <div class="modal-content" style="max-width: 1000px;">
+            <div class="modal-header">
+                <h3 class="modal-title">📂 Saved Scenarios</h3>
+                <button class="close-btn" onclick="closeLoadScenariosModal()">×</button>
+            </div>
+            <div id="savedScenariosList" style="max-height: 500px; overflow-y: auto;">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📂</div>
+                    <div>No saved scenarios yet</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        
+        let allTransactions = [];
+        let disabledTransactions = new Set();
+        let customTransactions = [];
+        let customTransactionIdCounter = 0;
+        let currentDays = 30;
+        let addModalType = null; // 'income', 'essential', or 'nonessential'
+        let currentScenarioName = null;
+        let currentScenarioId = null; // Track the loaded scenario ID for updates
+        let customDateRange = null; // { start: Date, end: Date }
+
+        // Category mappings
+        const ESSENTIAL_CATEGORIES = [
+            'Rent', 'Utilities', 'Groceries', 'Healthcare', 'Insurance',
+            'Transportation', 'Debt Payments', 'Housing'
+        ];
+
+        // Initialize
+        window.addEventListener('load', () => {
+            setDateRange(30);
+        });
+
+        // Set date range
+        function setDateRange(days, target = null) {
+            currentDays = days;
+            
+            // Hide custom date picker
+            document.getElementById('customDatePicker').style.display = 'none';
+            
+            // Update button states
+            document.querySelectorAll('.period-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            if (target) {
+                target.classList.add('active');
+            } else {
+                // Find and activate the button matching the days
+                document.querySelectorAll('.period-btn').forEach(btn => {
+                    if (btn.textContent.includes('30') && days === 30) btn.classList.add('active');
+                    if (btn.textContent.includes('90') && days === 90) btn.classList.add('active');
+                    if (btn.textContent.includes('6') && days === 180) btn.classList.add('active');
+                    if (btn.textContent.includes('1') && days === 365) btn.classList.add('active');
+                });
+            }
+            
+            loadTransactions();
+        }
+
+        // Show custom date range picker
+        function setCustomDateRange(target) {
+            const picker = document.getElementById('customDatePicker');
+            const isVisible = picker.style.display !== 'none';
+            
+            // Update button states
+            document.querySelectorAll('.period-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            target.classList.add('active');
+            
+            if (!isVisible) {
+                // Show picker and set default dates
+                picker.style.display = 'flex';
+                const today = new Date();
+                const thirtyDaysAgo = new Date();
+                thirtyDaysAgo.setDate(today.getDate() - 30);
+                
+                document.getElementById('endDate').valueAsDate = today;
+                document.getElementById('startDate').valueAsDate = thirtyDaysAgo;
+            } else {
+                picker.style.display = 'none';
+            }
+        }
+
+        // Apply custom date range
+        async function applyCustomDateRange() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            if (!startDate || !endDate) {
+                alert('Please select both start and end dates');
+                return;
+            }
+            
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            
+            if (start > end) {
+                alert('Start date must be before end date');
+                return;
+            }
+
+            // Save custom date range
+            customDateRange = { start, end };
+            
+            try {
+                const response = await fetch(`${API_BASE}/accounts/transactions`);
+                if (!response.ok) throw new Error('Failed to fetch transactions');
+                
+                const data = await response.json();
+                
+                // Filter by custom date range and exclude transfers
+                allTransactions = data.filter(t => {
+                    const txDate = new Date(t.date);
+                    const isNotTransfer = t.category !== 'Transfer' && 
+                                         t.category !== 'Transfer In' && 
+                                         t.category !== 'Transfers' && 
+                                         t.category !== 'Balance Payment';
+                    return txDate >= start && txDate <= end && isNotTransfer;
+                });
+
+                // Add custom transactions
+                allTransactions = [...allTransactions, ...customTransactions];
+
+                renderCategories();
+                updateStats();
+                updateToggleButton();
+            } catch (error) {
+                console.error('Error loading data:', error);
+                alert('Failed to load transaction data. Make sure the API is running.');
+            }
+        }
+
+        // Load transactions
+        async function loadTransactions() {
+            try {
+                const response = await fetch(`${API_BASE}/accounts/transactions`);
+                if (!response.ok) throw new Error('Failed to fetch transactions');
+                
+                const data = await response.json();
+                
+                // Filter by date range and exclude transfers
+                const cutoffDate = new Date();
+                cutoffDate.setDate(cutoffDate.getDate() - currentDays);
+                
+                allTransactions = data.filter(t => {
+                    const txDate = new Date(t.date);
+                    const isNotTransfer = t.category !== 'Transfer' && 
+                                         t.category !== 'Transfer In' && 
+                                         t.category !== 'Transfers' && 
+                                         t.category !== 'Balance Payment';
+                    return txDate >= cutoffDate && isNotTransfer;
+                });
+
+                // Add custom transactions
+                allTransactions = [...allTransactions, ...customTransactions];
+
+                renderCategories();
+                updateStats();
+                updateToggleButton();
+            } catch (error) {
+                console.error('Error loading data:', error);
+                alert('Failed to load transaction data. Make sure the API is running.');
+            }
+        }
+
+        // Group transactions by category
+        function groupByCategory(transactions) {
+            const groups = new Map();
+            
+            transactions.forEach(tx => {
+                const category = tx.category || 'Uncategorized';
+                if (!groups.has(category)) {
+                    groups.set(category, []);
+                }
+                groups.get(category).push(tx);
+            });
+            
+            return groups;
+        }
+
+        // Render categories
+        function renderCategories() {
+            const income = allTransactions.filter(t => t.amount > 0);
+            const expenses = allTransactions.filter(t => t.amount < 0);
+            const essential = expenses.filter(t => t.isEssentialExpense === true);
+            const nonessential = expenses.filter(t => t.isEssentialExpense === false);
+
+            console.log('Total transactions:', allTransactions.length);
+            console.log('Income:', income.length);
+            console.log('Expenses:', expenses.length);
+            console.log('Essential:', essential.length);
+            console.log('Non-essential:', nonessential.length);
+            console.log('Lost transactions:', expenses.length - essential.length - nonessential.length);
+            
+            // Debug Patreon transactions
+            const patreon = allTransactions.filter(t => t.description && t.description.includes('Patreon'));
+            console.log('Patreon transactions:', patreon.length);
+            patreon.forEach(p => {
+                console.log('Patreon:', p.description, 'isEssential:', p.isEssentialExpense, 'type:', typeof p.isEssentialExpense);
+            });
+
+            renderCategoryGroup('income-categories', groupByCategory(income), true, 'income');
+            renderCategoryGroup('essential-categories', groupByCategory(essential), false, 'essential');
+            renderCategoryGroup('nonessential-categories', groupByCategory(nonessential), false, 'nonessential');
+
+            // Update counts
+            document.getElementById('income-count').textContent = income.length;
+            document.getElementById('income-disabled').textContent = income.filter(t => disabledTransactions.has(t.id)).length;
+            document.getElementById('essential-count').textContent = essential.length;
+            document.getElementById('essential-disabled').textContent = essential.filter(t => disabledTransactions.has(t.id)).length;
+            document.getElementById('nonessential-count').textContent = nonessential.length;
+            document.getElementById('nonessential-disabled').textContent = nonessential.filter(t => disabledTransactions.has(t.id)).length;
+        }
+
+        // Render category group
+        function renderCategoryGroup(containerId, groups, isIncome, sectionType = 'income') {
+            const container = document.getElementById(containerId);
+            
+            if (groups.size === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">${isIncome ? '💰' : '📦'}</div>
+                        <div>No ${isIncome ? 'income' : 'expenses'} in this period</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const sortedGroups = Array.from(groups.entries()).sort((a, b) => {
+                const sumA = Math.abs(a[1].reduce((sum, t) => sum + t.amount, 0));
+                const sumB = Math.abs(b[1].reduce((sum, t) => sum + t.amount, 0));
+                return sumB - sumA;
+            });
+
+            container.innerHTML = sortedGroups.map(([category, transactions]) => {
+                const total = transactions.reduce((sum, t) => sum + Math.abs(t.amount), 0);
+                const activeCount = transactions.filter(t => !disabledTransactions.has(t.id)).length;
+                const sign = isIncome ? '+' : '-';
+                
+                return `
+                    <div class="category-item" onclick="showCategoryTransactions('${escapeHtml(category)}', '${sectionType}')">
+                        <div class="category-info">
+                            <div class="category-name">${category}</div>
+                            <div class="category-count">${activeCount}/${transactions.length} transactions</div>
+                        </div>
+                        <div class="category-amount">${sign}€${total.toFixed(2)}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Show category transactions
+        function showCategoryTransactions(category, sectionType) {
+            let transactions;
+            if (sectionType === 'income') {
+                transactions = allTransactions.filter(t => {
+                    const matches = (t.category || 'Uncategorized') === category;
+                    return matches && t.amount > 0;
+                });
+            } else if (sectionType === 'essential') {
+                transactions = allTransactions.filter(t => {
+                    const matches = (t.category || 'Uncategorized') === category;
+                    return matches && t.amount < 0 && t.isEssentialExpense === true;
+                });
+            } else { // nonessential
+                transactions = allTransactions.filter(t => {
+                    const matches = (t.category || 'Uncategorized') === category;
+                    return matches && t.amount < 0 && t.isEssentialExpense === false;
+                });
+            }
+
+            const modal = document.getElementById('transactionModal');
+            modal.dataset.sectionType = sectionType;
+            document.getElementById('modalTitle').textContent = `${category} (${transactions.length})`;
+            
+            const modalContent = document.getElementById('modalTransactions');
+            modalContent.innerHTML = transactions
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .map(tx => {
+                    const isDisabled = disabledTransactions.has(tx.id);
+                    const date = new Date(tx.date).toLocaleDateString();
+                    const amount = Math.abs(tx.amount);
+                    const sign = tx.amount > 0 ? '+' : '-';
+                    const customBadge = tx.isCustom ? '<span style="background: linear-gradient(135deg, #06b6d4 0%, #14b8a6 100%); color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; margin-left: 8px;">CUSTOM</span>' : '';
+                    
+                    return `
+                        <div class="transaction-item ${isDisabled ? 'disabled' : ''}" onclick="toggleTransaction('${tx.id}')">
+                            <div class="transaction-info">
+                                <div class="transaction-description">${tx.description || 'No description'}${customBadge}</div>
+                                <div class="transaction-details">${date} • ${tx.category || 'Uncategorized'}</div>
+                            </div>
+                            <div class="transaction-amount ${tx.amount > 0 ? 'positive' : 'negative'}">${sign}€${amount.toFixed(2)}</div>
+                            <div class="toggle-badge ${isDisabled ? 'non-essential' : 'essential'}">
+                                ${isDisabled ? 'DISABLED' : 'ACTIVE'}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+            document.getElementById('transactionModal').style.display = 'block';
+        }
+
+        // Toggle transaction
+        function toggleTransaction(transactionId) {
+            if (disabledTransactions.has(transactionId)) {
+                disabledTransactions.delete(transactionId);
+            } else {
+                disabledTransactions.add(transactionId);
+            }
+            
+            renderCategories();
+            updateStats();
+            
+            // Refresh modal if open
+            const modal = document.getElementById('transactionModal');
+            if (modal.style.display === 'block') {
+                const title = document.getElementById('modalTitle').textContent;
+                const category = title.substring(0, title.lastIndexOf('(') - 1);
+                // Determine section type from the modal data
+                const sectionType = modal.dataset.sectionType || 'income';
+                showCategoryTransactions(category, sectionType);
+            }
+        }
+
+        // Update stats
+        function updateStats() {
+            const active = allTransactions.filter(t => !disabledTransactions.has(t.id));
+            
+            // Exclude transfers and balance payments from calculations
+            const nonTransfer = active.filter(t => 
+                t.category !== 'Transfer' && t.category !== 'Transfer In' && t.category !== 'Transfers' && t.category !== 'Balance Payment'
+            );
+            
+            const income = nonTransfer.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0);
+            const essential = nonTransfer.filter(t => t.amount < 0 && t.isEssentialExpense === true)
+                .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+            const nonessential = nonTransfer.filter(t => t.amount < 0 && !t.isEssentialExpense)
+                .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+            const expenses = essential + nonessential;
+            const net = income - expenses;
+
+            document.getElementById('stat-income').textContent = `€${income.toFixed(2)}`;
+            document.getElementById('stat-essential').textContent = `€${essential.toFixed(2)}`;
+            document.getElementById('stat-nonessential').textContent = `€${nonessential.toFixed(2)}`;
+            document.getElementById('stat-expenses').textContent = `€${expenses.toFixed(2)}`;
+            document.getElementById('stat-net').textContent = `€${net.toFixed(2)}`;
+            
+            const netElement = document.getElementById('stat-net');
+            netElement.className = `stat-value ${net >= 0 ? 'positive' : 'negative'}`;
+        }
+
+        // Reset all toggles
+        function resetAllToggles() {
+            if (customTransactions.length > 0) {
+                if (!confirm('This will also remove all custom transactions and reset the scenario. Continue?')) {
+                    return;
+                }
+                customTransactions = [];
+            }
+            disabledTransactions.clear();
+            currentScenarioName = null;
+            currentScenarioId = null;
+            customDateRange = null;
+            updateScenarioTitle();
+            loadTransactions();
+        }
+
+        // Toggle all non-essential transactions
+        function toggleAllNonEssential() {
+            const nonessential = allTransactions.filter(t => 
+                t.amount < 0 && t.isEssentialExpense === false
+            );
+            
+            // Check if all non-essential are currently disabled
+            const allDisabled = nonessential.every(t => disabledTransactions.has(t.id));
+            
+            if (allDisabled) {
+                // Enable all non-essential
+                nonessential.forEach(t => disabledTransactions.delete(t.id));
+            } else {
+                // Disable all non-essential
+                nonessential.forEach(t => disabledTransactions.add(t.id));
+            }
+            
+            renderCategories();
+            updateStats();
+            updateToggleButton();
+        }
+
+        // Update toggle button text
+        function updateToggleButton() {
+            const nonessential = allTransactions.filter(t => 
+                t.amount < 0 && t.isEssentialExpense === false
+            );
+            const allDisabled = nonessential.length > 0 && nonessential.every(t => disabledTransactions.has(t.id));
+            
+            const btn = document.getElementById('toggleNonEssentialBtn');
+            if (btn) {
+                btn.textContent = allDisabled ? 'Enable All Non-Essential' : 'Disable All Non-Essential';
+            }
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('transactionModal').style.display = 'none';
+        }
+
+        // Show add income modal
+        function showAddIncomeModal() {
+            addModalType = 'income';
+            document.getElementById('addModalTitle').textContent = 'Add Income Source';
+            document.getElementById('addDescription').value = '';
+            document.getElementById('addAmount').value = '';
+            document.getElementById('addCategory').value = '';
+            document.getElementById('addFrequency').value = 'monthly';
+            document.getElementById('addTransactionModal').style.display = 'block';
+        }
+
+        // Show add expense modal
+        function showAddExpenseModal(isEssential) {
+            addModalType = isEssential ? 'essential' : 'nonessential';
+            document.getElementById('addModalTitle').textContent = isEssential ? 'Add Essential Expense' : 'Add Non-Essential Expense';
+            document.getElementById('addDescription').value = '';
+            document.getElementById('addAmount').value = '';
+            document.getElementById('addCategory').value = '';
+            document.getElementById('addFrequency').value = 'monthly';
+            document.getElementById('addTransactionModal').style.display = 'block';
+        }
+
+        // Close add modal
+        function closeAddModal() {
+            document.getElementById('addTransactionModal').style.display = 'none';
+            addModalType = null;
+        }
+
+        // Add custom transaction
+        function addCustomTransaction() {
+            const description = document.getElementById('addDescription').value.trim();
+            const amount = parseFloat(document.getElementById('addAmount').value);
+            const category = document.getElementById('addCategory').value.trim();
+            const frequency = document.getElementById('addFrequency').value;
+
+            if (!description) {
+                alert('Please enter a description');
+                return;
+            }
+            if (!amount || amount <= 0) {
+                alert('Please enter a valid amount');
+                return;
+            }
+            if (!category) {
+                alert('Please enter a category');
+                return;
+            }
+
+            // Calculate how many instances based on frequency and current date range
+            let instances = 1;
+            if (frequency === 'daily') {
+                instances = currentDays;
+            } else if (frequency === 'weekly') {
+                instances = Math.floor(currentDays / 7);
+            } else if (frequency === 'monthly') {
+                instances = Math.floor(currentDays / 30);
+            } else if (frequency === 'yearly') {
+                instances = Math.floor(currentDays / 365);
+            }
+
+            // Ensure at least one instance
+            instances = Math.max(1, instances);
+
+            // Create transaction(s)
+            const today = new Date();
+            for (let i = 0; i < instances; i++) {
+                const txDate = new Date(today);
+                
+                // Calculate date based on frequency
+                if (frequency === 'daily') {
+                    txDate.setDate(today.getDate() - i);
+                } else if (frequency === 'weekly') {
+                    txDate.setDate(today.getDate() - (i * 7));
+                } else if (frequency === 'monthly') {
+                    txDate.setMonth(today.getMonth() - i);
+                } else if (frequency === 'yearly') {
+                    txDate.setFullYear(today.getFullYear() - i);
+                }
+
+                const customTx = {
+                    id: `custom-${customTransactionIdCounter++}`,
+                    description: description + (instances > 1 ? ` (${i + 1}/${instances})` : ''),
+                    amount: addModalType === 'income' ? amount : -amount,
+                    category: category,
+                    date: txDate.toISOString(),
+                    isEssentialExpense: addModalType === 'essential',
+                    isCustom: true
+                };
+
+                customTransactions.push(customTx);
+            }
+
+            closeAddModal();
+            loadTransactions();
+        }
+
+        // ===== SCENARIO MANAGEMENT =====
+
+        // Show save scenario modal
+        function showSaveScenarioModal() {
+            // Update the summary in the modal
+            const dateRangeText = customDateRange 
+                ? `${customDateRange.start.toLocaleDateString()} - ${customDateRange.end.toLocaleDateString()}`
+                : `Last ${currentDays} days`;
+            
+            document.getElementById('saveDateRange').textContent = dateRangeText;
+            document.getElementById('saveCustomCount').textContent = customTransactions.length;
+            document.getElementById('saveDisabledCount').textContent = disabledTransactions.size;
+            
+            // If a scenario is currently loaded, show update button
+            if (currentScenarioId) {
+                const nameField = document.getElementById('scenarioName');
+                nameField.value = currentScenarioName || '';
+                nameField.readOnly = false; // Allow editing for "Save As New"
+                nameField.placeholder = 'Enter a new name to save as new scenario';
+                document.getElementById('saveScenarioBtn').textContent = '💾 Save As New';
+                document.getElementById('updateScenarioBtn').style.display = 'inline-block';
+                
+                // Load the existing description if available
+                const scenarios = getSavedScenarios();
+                const existingScenario = scenarios.find(s => s.id === currentScenarioId);
+                if (existingScenario) {
+                    document.getElementById('scenarioDescription').value = existingScenario.description || '';
+                }
+            } else {
+                const nameField = document.getElementById('scenarioName');
+                nameField.value = '';
+                nameField.readOnly = false;
+                nameField.placeholder = 'e.g., Job Loss Scenario, Reduced Spending';
+                document.getElementById('scenarioDescription').value = '';
+                document.getElementById('saveScenarioBtn').textContent = '💾 Save Scenario';
+                document.getElementById('updateScenarioBtn').style.display = 'none';
+            }
+            
+            document.getElementById('saveScenarioModal').style.display = 'block';
+        }
+
+        // Close save scenario modal
+        function closeSaveScenarioModal() {
+            document.getElementById('saveScenarioModal').style.display = 'none';
+        }
+
+        // Save scenario
+        async function saveScenario() {
+            const name = document.getElementById('scenarioName').value.trim();
+            const description = document.getElementById('scenarioDescription').value.trim();
+
+            if (!name) {
+                alert('Please enter a scenario name');
+                return;
+            }
+
+            // Get current stats for saving
+            const active = allTransactions.filter(t => !disabledTransactions.has(t.id));
+            const nonTransfer = active.filter(t => 
+                t.category !== 'Transfer' && t.category !== 'Transfer In' && t.category !== 'Transfers' && t.category !== 'Balance Payment'
+            );
+            
+            const income = nonTransfer.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0);
+            const essential = nonTransfer.filter(t => t.amount < 0 && t.isEssentialExpense === true)
+                .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+            const nonessential = nonTransfer.filter(t => t.amount < 0 && !t.isEssentialExpense)
+                .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+            const expenses = essential + nonessential;
+            const net = income - expenses;
+
+            const scenario = {
+                name: name,
+                description: description,
+                savedDate: new Date().toISOString(),
+                dateRangeStart: customDateRange ? customDateRange.start.toISOString() : null,
+                dateRangeEnd: customDateRange ? customDateRange.end.toISOString() : null,
+                days: customDateRange ? null : currentDays,
+                customTransactionsJson: JSON.stringify(customTransactions),
+                disabledTransactionsJson: JSON.stringify(Array.from(disabledTransactions)),
+                statsJson: JSON.stringify({
+                    income: income,
+                    essential: essential,
+                    nonessential: nonessential,
+                    expenses: expenses,
+                    net: net
+                })
+            };
+
+            try {
+                const response = await fetch('/api/scenarios', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(scenario)
+                });
+
+                if (!response.ok) {
+                    const error = await response.text();
+                    alert(error || 'Error saving scenario');
+                    return;
+                }
+
+                const savedScenario = await response.json();
+                currentScenarioName = savedScenario.name;
+                currentScenarioId = savedScenario.id;
+                updateScenarioTitle();
+
+                closeSaveScenarioModal();
+                alert(`Scenario "${savedScenario.name}" saved successfully!`);
+            } catch (error) {
+                console.error('Error saving scenario:', error);
+                alert('Error saving scenario. Please try again.');
+            }
+        }
+
+        // Update existing scenario
+        async function updateScenario() {
+            if (!currentScenarioId) {
+                alert('No scenario is currently loaded');
+                return;
+            }
+
+            const name = document.getElementById('scenarioName').value.trim();
+            const description = document.getElementById('scenarioDescription').value.trim();
+
+            if (!name) {
+                alert('Please enter a scenario name');
+                return;
+            }
+
+            // Get current stats for updating
+            const active = allTransactions.filter(t => !disabledTransactions.has(t.id));
+            const nonTransfer = active.filter(t => 
+                t.category !== 'Transfer' && t.category !== 'Transfer In' && t.category !== 'Transfers' && t.category !== 'Balance Payment'
+            );
+            
+            const income = nonTransfer.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0);
+            const essential = nonTransfer.filter(t => t.amount < 0 && t.isEssentialExpense === true)
+                .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+            const nonessential = nonTransfer.filter(t => t.amount < 0 && !t.isEssentialExpense)
+                .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+            const expenses = essential + nonessential;
+            const net = income - expenses;
+
+            const scenario = {
+                id: currentScenarioId,
+                name: name,
+                description: description,
+                savedDate: new Date().toISOString(),
+                dateRangeStart: customDateRange ? customDateRange.start.toISOString() : null,
+                dateRangeEnd: customDateRange ? customDateRange.end.toISOString() : null,
+                days: customDateRange ? null : currentDays,
+                customTransactionsJson: JSON.stringify(customTransactions),
+                disabledTransactionsJson: JSON.stringify(Array.from(disabledTransactions)),
+                statsJson: JSON.stringify({
+                    income: income,
+                    essential: essential,
+                    nonessential: nonessential,
+                    expenses: expenses,
+                    net: net
+                })
+            };
+
+            try {
+                const response = await fetch(`/api/scenarios/${currentScenarioId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(scenario)
+                });
+
+                if (!response.ok) {
+                    const error = await response.text();
+                    alert(error || 'Error updating scenario');
+                    return;
+                }
+
+                const updatedScenario = await response.json();
+                currentScenarioName = updatedScenario.name;
+                updateScenarioTitle();
+
+                closeSaveScenarioModal();
+                alert(`Scenario "${updatedScenario.name}" updated successfully!`);
+            } catch (error) {
+                console.error('Error updating scenario:', error);
+                alert('Error updating scenario. Please try again.');
+            }
+        }
+
+        // Get saved scenarios
+        async function getSavedScenarios() {
+            try {
+                const response = await fetch('/api/scenarios');
+                if (!response.ok) {
+                    console.error('Error fetching scenarios');
+                    return [];
+                }
+                return await response.json();
+            } catch (error) {
+                console.error('Error fetching scenarios:', error);
+                return [];
+            }
+        }
+
+        // Show load scenarios modal
+        async function showLoadScenariosModal() {
+            const scenarios = await getSavedScenarios();
+            const container = document.getElementById('savedScenariosList');
+
+            if (scenarios.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📂</div>
+                        <div>No saved scenarios yet</div>
+                        <div style="color: rgba(255, 255, 255, 0.5); font-size: 12px; margin-top: 10px;">
+                            Create a scenario and save it to see it here
+                        </div>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = scenarios
+                    .sort((a, b) => new Date(b.savedDate) - new Date(a.savedDate))
+                    .map(scenario => {
+                        const stats = JSON.parse(scenario.statsJson || '{}');
+                        const customTxCount = JSON.parse(scenario.customTransactionsJson || '[]').length;
+                        const disabledTxCount = JSON.parse(scenario.disabledTransactionsJson || '[]').length;
+                        const savedDate = new Date(scenario.savedDate).toLocaleDateString();
+                        const savedTime = new Date(scenario.savedDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        const dateRangeText = scenario.dateRangeStart && scenario.dateRangeEnd
+                            ? `${new Date(scenario.dateRangeStart).toLocaleDateString()} - ${new Date(scenario.dateRangeEnd).toLocaleDateString()}`
+                            : `Last ${scenario.days} days`;
+
+                        return `
+                            <div class="scenario-card">
+                                <div class="scenario-card-header">
+                                    <div>
+                                        <div class="scenario-card-title">${escapeHtml(scenario.name)}</div>
+                                        <div class="scenario-card-date">💾 Saved: ${savedDate} at ${savedTime}</div>
+                                        <div class="scenario-card-date">📅 ${dateRangeText}</div>
+                                    </div>
+                                </div>
+                                ${scenario.description ? `<div class="scenario-card-description">${escapeHtml(scenario.description)}</div>` : ''}
+                                <div class="scenario-card-stats">
+                                    <div class="scenario-card-stat">
+                                        <div class="scenario-card-stat-label">Income</div>
+                                        <div class="scenario-card-stat-value" style="color: #10b981;">€${stats.income?.toFixed(2) || '0.00'}</div>
+                                    </div>
+                                    <div class="scenario-card-stat">
+                                        <div class="scenario-card-stat-label">Essential</div>
+                                        <div class="scenario-card-stat-value" style="color: #ef4444;">€${stats.essential?.toFixed(2) || '0.00'}</div>
+                                    </div>
+                                    <div class="scenario-card-stat">
+                                        <div class="scenario-card-stat-label">Non-Essential</div>
+                                        <div class="scenario-card-stat-value" style="color: #f59e0b;">€${stats.nonessential?.toFixed(2) || '0.00'}</div>
+                                    </div>
+                                    <div class="scenario-card-stat">
+                                        <div class="scenario-card-stat-label">Net Cash Flow</div>
+                                        <div class="scenario-card-stat-value" style="color: ${(stats.net || 0) >= 0 ? '#10b981' : '#ef4444'};">€${stats.net?.toFixed(2) || '0.00'}</div>
+                                    </div>
+                                </div>
+                                <div style="color: rgba(255, 255, 255, 0.6); font-size: 12px; margin-bottom: 10px;">
+                                    ${customTxCount} custom transactions • ${disabledTxCount} disabled transactions
+                                </div>
+                                <div class="scenario-card-actions">
+                                    <button class="scenario-card-btn load" onclick="loadScenario('${scenario.id}')">📂 Load Scenario</button>
+                                    <button class="scenario-card-btn delete" onclick="deleteScenario('${scenario.id}', event)">🗑️ Delete</button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+            }
+
+            document.getElementById('loadScenariosModal').style.display = 'block';
+        }
+
+        // Close load scenarios modal
+        function closeLoadScenariosModal() {
+            document.getElementById('loadScenariosModal').style.display = 'none';
+        }
+
+        // Load scenario
+        async function loadScenario(scenarioId) {
+            const scenarios = await getSavedScenarios();
+            const scenario = scenarios.find(s => s.id === scenarioId);
+
+            if (!scenario) {
+                alert('Scenario not found');
+                return;
+            }
+
+            // Parse JSON fields from database
+            const customTransactionsData = JSON.parse(scenario.customTransactionsJson || '[]');
+            const disabledTransactionsData = JSON.parse(scenario.disabledTransactionsJson || '[]');
+
+            // Restore custom transactions
+            customTransactions = JSON.parse(JSON.stringify(customTransactionsData));
+            customTransactionIdCounter = Math.max(0, ...customTransactions.map(t => {
+                const match = t.id.match(/custom-(\d+)/);
+                return match ? parseInt(match[1]) : 0;
+            })) + 1;
+
+            // Restore disabled transactions
+            disabledTransactions = new Set(disabledTransactionsData);
+
+            // Restore date range
+            if (scenario.dateRangeStart && scenario.dateRangeEnd) {
+                customDateRange = {
+                    start: new Date(scenario.dateRangeStart),
+                    end: new Date(scenario.dateRangeEnd)
+                };
+                
+                // Show custom date picker and set dates
+                const picker = document.getElementById('customDatePicker');
+                picker.style.display = 'flex';
+                document.getElementById('startDate').valueAsDate = customDateRange.start;
+                document.getElementById('endDate').valueAsDate = customDateRange.end;
+                
+                // Update button states
+                document.querySelectorAll('.period-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.textContent.includes('Custom')) {
+                        btn.classList.add('active');
+                    }
+                });
+
+                await applyCustomDateRange();
+            } else {
+                customDateRange = null;
+                await setDateRange(scenario.days);
+            }
+
+            currentScenarioName = scenario.name;
+            currentScenarioId = scenarioId;
+            updateScenarioTitle();
+
+            closeLoadScenariosModal();
+            alert(`Scenario "${scenario.name}" loaded successfully!`);
+        }
+
+        // Delete scenario
+        async function deleteScenario(scenarioId, event) {
+            event.stopPropagation();
+
+            const scenarios = await getSavedScenarios();
+            const scenario = scenarios.find(s => s.id === scenarioId);
+
+            if (!scenario) return;
+
+            if (confirm(`Are you sure you want to delete "${scenario.name}"?`)) {
+                try {
+                    const response = await fetch(`/api/scenarios/${scenarioId}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (!response.ok) {
+                        alert('Error deleting scenario');
+                        return;
+                    }
+
+                    // If we're deleting the currently loaded scenario, clear it
+                    if (currentScenarioId === scenarioId) {
+                        currentScenarioId = null;
+                        currentScenarioName = null;
+                        updateScenarioTitle();
+                    }
+                    
+                    showLoadScenariosModal(); // Refresh the list
+                } catch (error) {
+                    console.error('Error deleting scenario:', error);
+                    alert('Error deleting scenario. Please try again.');
+                }
+            }
+        }
+
+        // Update scenario title
+        function updateScenarioTitle() {
+            const titleElement = document.getElementById('scenarioTitle');
+            if (currentScenarioName) {
+                titleElement.textContent = `💡 ${currentScenarioName}`;
+            } else {
+                titleElement.textContent = '💡 Simulation Mode Active';
+            }
+        }
+
+        // Update modal close handlers
+        window.onclick = function(event) {
+            const modal = document.getElementById('transactionModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+            const addModal = document.getElementById('addTransactionModal');
+            if (event.target === addModal) {
+                closeAddModal();
+            }
+            const saveModal = document.getElementById('saveScenarioModal');
+            if (event.target === saveModal) {
+                closeSaveScenarioModal();
+            }
+            const loadModal = document.getElementById('loadScenariosModal');
+            if (event.target === loadModal) {
+                closeLoadScenariosModal();
+            }
+        }
+
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
+

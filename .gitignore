@@ -1,0 +1,48 @@
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.vscode/
+*.dll
+*.exe
+*.pdb
+.env
+appsettings.*.json
+!appsettings.json
+!appsettings.Development.json
+Migrations/
+publish/
+
+# Python virtual environment
+.venv/
+__pycache__/
+*.pyc
+
+# CTF scripts and challenge files
+CTF/
+
+# Temporary files
+check_*.sql
+verify_*.sql
+setup_admin_role.sql
+fix_migrations.sql
+cleanup_duplicates.sql
+add_transaction_type.sql
+*.sql.bak
+
+# Docker volumes
+postgres_data/
+
+# Build outputs
+project.bundle
+._project.bundle
+VERSION
+._VERSION
+
+# Temporary/test files
+admin-register.json
+admin_dashboard.html
+admin_logs.html
+*.tmp
+*.log

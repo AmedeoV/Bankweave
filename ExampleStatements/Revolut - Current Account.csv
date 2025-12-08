@@ -1,0 +1,9 @@
+Type,Product,Started Date,Completed Date,Description,Amount,Fee,Currency,State,Balance
+Topup,Current,2024-12-01 10:00:00,2024-12-01 10:00:00,Salary Payment,2500.00,0.00,EUR,COMPLETED,2500.00
+Card Payment,Current,2024-12-02 14:30:00,2024-12-02 15:00:00,Supermarket,-75.50,0.00,EUR,COMPLETED,2424.50
+Card Payment,Current,2024-12-03 19:20:00,2024-12-03 20:00:00,Restaurant,-45.00,0.00,EUR,COMPLETED,2379.50
+Transfer,Current,2024-12-04 09:15:00,2024-12-04 09:15:00,Rent Payment,-900.00,0.00,EUR,COMPLETED,1479.50
+Card Payment,Current,2024-12-05 11:30:00,2024-12-05 12:00:00,Coffee Shop,-4.50,0.00,EUR,COMPLETED,1475.00
+Card Payment,Current,2024-12-06 16:45:00,2024-12-06 17:30:00,Online Shopping,-32.99,0.00,EUR,COMPLETED,1442.01
+Reward,Current,2024-12-07 08:00:00,2024-12-07 08:00:00,Cashback Reward,5.00,0.00,EUR,COMPLETED,1447.01
+Card Payment,Current,2024-12-08 13:20:00,2024-12-08 14:00:00,Pharmacy,-15.99,0.00,EUR,COMPLETED,1431.02

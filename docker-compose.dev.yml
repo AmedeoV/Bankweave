@@ -1,0 +1,63 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: bankweave-postgres-dev
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-bankweavedb}
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secretpass}
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    ports:
+      - "5435:5432"
+    networks:
+      - bankweave-network-dev
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin} -d ${POSTGRES_DB:-bankweavedb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: bankweave-web-dev
+    ports:
+      - "8082:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - Database__Host=postgres
+      - Database__Port=5432
+      - Database__Name=${POSTGRES_DB:-bankweavedb}
+      - Database__User=${POSTGRES_USER:-admin}
+      - Database__Password=${POSTGRES_PASSWORD:-secretpass}
+      - Jwt__Secret=${JWT_SECRET:-YourSuperSecretKeyThatIsAtLeast32CharactersLong!}
+      - Jwt__Issuer=${JWT_ISSUER:-Bankweave}
+      - Jwt__Audience=${JWT_AUDIENCE:-BankweaveUsers}
+      - DOTNET_USE_POLLING_FILE_WATCHER=true
+    volumes:
+      # Mount source code for hot reload
+      - ./Controllers:/app/Controllers
+      - ./Entities:/app/Entities
+      - ./Infrastructure:/app/Infrastructure
+      - ./Models:/app/Models
+      - ./Migrations:/app/Migrations
+      - ./wwwroot:/app/wwwroot
+      - ./appsettings.json:/app/appsettings.json
+      - ./appsettings.Development.json:/app/appsettings.Development.json
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - bankweave-network-dev
+
+volumes:
+  postgres_data_dev:
+
+networks:
+  bankweave-network-dev:
+    driver: bridge

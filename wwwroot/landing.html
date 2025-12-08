@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bankweave - Personal Finance Dashboard</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0f172a;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+        }
+
+        .bg-animation::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 20%, rgba(236, 72, 153, 0.1) 0%, transparent 50%);
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(30px, -30px) rotate(5deg); }
+            66% { transform: translate(-20px, 20px) rotate(-5deg); }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Navigation */
+        nav {
+            padding: 20px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 80px 0 60px;
+        }
+
+        .hero h1 {
+            font-size: 56px;
+            font-weight: 800;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .hero-buttons .btn {
+            padding: 16px 32px;
+            font-size: 16px;
+        }
+
+        /* Features Section */
+        .features {
+            padding: 80px 0;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 60px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-bottom: 80px;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 40px 30px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(99, 102, 241, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        .feature-card h3 {
+            font-size: 20px;
+            margin-bottom: 12px;
+            color: #ffffff;
+        }
+
+        .feature-card p {
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        /* Demo Section */
+        .demo {
+            padding: 80px 0;
+            text-align: center;
+        }
+
+        .demo-preview {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            margin-top: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        }
+
+        .demo-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .demo-stat {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+        }
+
+        .demo-stat h4 {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .demo-stat .value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .demo-stat .value.positive {
+            color: #10b981;
+        }
+
+        .demo-stat .value.negative {
+            color: #ef4444;
+        }
+
+        .demo-features-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            text-align: left;
+            margin-top: 30px;
+        }
+
+        .demo-feature-item {
+            display: flex;
+            align-items: start;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .demo-feature-item .icon {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: white;
+            font-size: 14px;
+        }
+
+        .demo-feature-item span {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+        }
+
+        /* CTA Section */
+        .cta {
+            padding: 80px 0;
+            text-align: center;
+        }
+
+        .cta-box {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            padding: 60px 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(20px);
+        }
+
+        .cta-box h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+
+        .cta-box p {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 30px;
+        }
+
+        /* Footer */
+        footer {
+            padding: 40px 0;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 14px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 36px;
+            }
+
+            .hero p {
+                font-size: 16px;
+            }
+
+            .section-title {
+                font-size: 28px;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation"></div>
+
+    <div class="container">
+        <!-- Navigation -->
+        <nav>
+            <div class="logo">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" style="width: 32px; height: 32px;">
+                    <defs>
+                        <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+                            <stop offset="50%" style="stop-color:#8b5cf6;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#ec4899;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <rect width="100" height="100" rx="20" fill="url(#logoGrad)"/>
+                    <path d="M30 40 L30 70 L45 70 L45 50 L55 50 L55 70 L70 70 L70 40 L50 25 Z" fill="white" opacity="0.9"/>
+                    <circle cx="50" cy="60" r="8" fill="white"/>
+                    <text x="50" y="66" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="url(#logoGrad)" text-anchor="middle">€</text>
+                </svg>
+                Bankweave
+            </div>
+            <div class="nav-buttons">
+                <a href="/login.html" class="btn btn-secondary">Login</a>
+                <a href="/register.html" class="btn btn-primary">Get Started</a>
+            </div>
+        </nav>
+
+        <!-- Hero Section -->
+        <section class="hero">
+            <h1>
+                Manage Your Finances<br>
+                <span class="gradient-text">Like Never Before</span>
+            </h1>
+            <p>
+                A powerful personal finance dashboard that helps you track accounts, 
+                categorize transactions, and visualize your financial journey with beautiful charts and insights.
+            </p>
+            <div class="hero-buttons">
+                <a href="/register.html" class="btn btn-primary">Start Free</a>
+                <a href="#demo" class="btn btn-secondary">See Demo</a>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="features">
+            <h2 class="section-title">Everything You Need to Succeed</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Multi-Account Dashboard</h3>
+                    <p>Connect and monitor multiple bank accounts, credit cards, and investment accounts all in one place.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🏷️</div>
+                    <h3>Smart Categorization</h3>
+                    <p>Automatically categorize transactions with custom rules. Track spending by category with beautiful charts.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📈</div>
+                    <h3>Detailed Analytics</h3>
+                    <p>Get insights into your income, expenses, and essential spending patterns over time.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🔄</div>
+                    <h3>Recurring Transactions</h3>
+                    <p>Identify subscriptions and recurring payments automatically. Never miss a subscription renewal.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>What-If Scenarios</h3>
+                    <p>Plan your financial future with scenario modeling. Add hypothetical transactions and see the impact.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📁</div>
+                    <h3>CSV Import</h3>
+                    <p>Import transactions from multiple banks including Revolut, Trading212, Raisin, and more.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Demo Section -->
+        <section class="demo" id="demo">
+            <h2 class="section-title">See It In Action</h2>
+            <p style="color: rgba(255, 255, 255, 0.7); margin-bottom: 20px;">
+                Experience how Bankweave transforms your financial data into actionable insights
+            </p>
+
+            <div class="demo-preview">
+                <div class="demo-stats">
+                    <div class="demo-stat">
+                        <h4>Total Balance</h4>
+                        <div class="value">€12,450.50</div>
+                    </div>
+                    <div class="demo-stat">
+                        <h4>Income (30 days)</h4>
+                        <div class="value positive">€4,200.00</div>
+                    </div>
+                    <div class="demo-stat">
+                        <h4>Expenses (30 days)</h4>
+                        <div class="value negative">-€2,850.75</div>
+                    </div>
+                    <div class="demo-stat">
+                        <h4>Net Savings</h4>
+                        <div class="value positive">€1,349.25</div>
+                    </div>
+                </div>
+
+                <div class="demo-features-list">
+                    <div class="demo-feature-item">
+                        <div class="icon">✓</div>
+                        <span>Track unlimited accounts and transactions</span>
+                    </div>
+                    <div class="demo-feature-item">
+                        <div class="icon">✓</div>
+                        <span>Automatic categorization with custom rules</span>
+                    </div>
+                    <div class="demo-feature-item">
+                        <div class="icon">✓</div>
+                        <span>Beautiful charts and visualizations</span>
+                    </div>
+                    <div class="demo-feature-item">
+                        <div class="icon">✓</div>
+                        <span>Recurring transaction detection</span>
+                    </div>
+                    <div class="demo-feature-item">
+                        <div class="icon">✓</div>
+                        <span>What-if scenario planning</span>
+                    </div>
+                    <div class="demo-feature-item">
+                        <div class="icon">✓</div>
+                        <span>CSV import from major banks</span>
+                    </div>
+                    <div class="demo-feature-item">
+                        <div class="icon">✓</div>
+                        <span>Balance history tracking</span>
+                    </div>
+                    <div class="demo-feature-item">
+                        <div class="icon">✓</div>
+                        <span>Essential expenses monitoring</span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 40px;">
+                    <a href="/register.html" class="btn btn-primary" style="padding: 16px 40px; font-size: 16px;">
+                        Try It Now - It's Free
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="cta">
+            <div class="cta-box">
+                <h2>Ready to Take Control?</h2>
+                <p>Join thousands of users who have already transformed their financial management</p>
+                <a href="/register.html" class="btn btn-primary" style="padding: 16px 40px; font-size: 16px;">
+                    Create Your Free Account
+                </a>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer>
+            <p>&copy; 2025 Bankweave. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script src="/auth.js"></script>
+    <script>
+        // Redirect to dashboard if already logged in
+        if (Auth.isAuthenticated()) {
+            window.location.href = '/dashboard.html';
+        }
+
+        // Smooth scroll for demo link
+        document.querySelector('a[href="#demo"]').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('demo').scrollIntoView({ behavior: 'smooth' });
+        });
+    </script>
+</body>
+</html>

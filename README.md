@@ -1,0 +1,336 @@
+# Bankweave 💰
+
+A personal financial dashboard with user authentication that imports transactions via CSV and provides analytics for your accounts.
+
+## Features
+
+- 🔐 **User Authentication**: Secure login/register with JWT tokens and password management
+- 👥 **Multi-User Support**: Each user has their own isolated financial data
+- 🛡️ **Admin Panel**: User management interface for administrators
+- 📂 **CSV Import**: Support for Trading212, Trade Republic, Raisin, Revolut, PTSB, and generic CSV formats
+- 📊 **Financial Statistics**: Income, expenses, net worth, and balance tracking
+- 🎯 **Categorization Rules**: Auto-categorize transactions with custom rules
+- 📈 **What-If Scenarios**: Plan future expenses and see projected balances
+- 📱 **Web Dashboard**: Clean, mobile-friendly interface with professional teal theme
+- 🐳 **Docker Ready**: One-command deployment with dev and production modes
+- 🔥 **Hot Reload**: Development mode with automatic code reloading
+- 🔒 **Privacy First**: All data stays on your machine
+- 💾 **PostgreSQL Backend**: Reliable data storage with ASP.NET Core Identity
+
+## Supported Banks
+
+All banks that export CSV statements are supported:
+- ✅ Trading 212
+- ✅ Trade Republic
+- ✅ Raisin
+- ✅ Revolut
+- ✅ PTSB (Permanent TSB)
+- ✅ Any bank with CSV export (use Generic format)
+
+## Prerequisites
+
+1. **Docker & Docker Compose** - [Download](https://www.docker.com/products/docker-desktop)
+
+That's it! No external API keys or bank credentials needed.
+
+## Quick Start
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/YourUsername/Bankweave.git
+cd Bankweave
+```
+
+### 2. Start Bankweave (Development Mode)
+
+```powershell
+docker-compose -f docker-compose.dev.yml up -d --build
+```
+
+Access the app at: **http://localhost:8082**
+
+### 3. Create Your Account
+
+1. Navigate to http://localhost:8082
+2. Click "Get Started" or "Sign Up"
+3. Create your account with email and password
+4. Login and start importing your financial data
+
+### 4. Import Your Bank Data
+
+1. **Export CSV** from your bank (see [CSV Import Guide](CSV_IMPORT_GUIDE.md))
+2. **Open Dashboard** at http://localhost:8082
+3. **Click "Import CSV"**
+4. **Select your bank** and upload file
+5. **View your stats** immediately
+
+## Docker Modes
+
+### Development Mode (Recommended for Development)
+```powershell
+docker-compose -f docker-compose.dev.yml up -d
+```
+- Hot reload enabled for C#, HTML, CSS, JS files
+- Access: http://localhost:8082
+- Database: localhost:5435
+
+### Production Mode
+```powershell
+docker-compose up -d
+```
+- Optimized Release build
+- Access: http://localhost:8083
+- Database: localhost:5436
+
+See [DOCKER_QUICK_START.md](DOCKER_QUICK_START.md) for detailed Docker instructions.
+
+## CSV Import Guide
+
+See **[CSV_IMPORT_GUIDE.md](CSV_IMPORT_GUIDE.md)** for detailed instructions on:
+- Exporting CSV from each bank
+- Supported CSV formats
+- Troubleshooting import issues
+- Regular usage patterns
+
+## Project Structure
+
+```
+Bankweave/
+├── Controllers/              # API endpoints
+│   ├── AccountsController.cs     # Account management
+│   ├── StatsController.cs        # Financial statistics
+│   ├── CsvImportController.cs    # CSV upload & parsing
+│   ├── RulesController.cs        # Categorization rules
+│   ├── ScenariosController.cs    # What-if scenarios
+│   ├── AuthController.cs         # Authentication (login/register/password)
+│   └── AdminController.cs        # User management (admin only)
+├── Entities/                 # Database models
+│   ├── ApplicationUser.cs        # User entity with Identity
+│   ├── FinancialAccount.cs       # Bank accounts
+│   ├── MoneyMovement.cs          # Transactions
+│   ├── CategorizationRule.cs     # Auto-categorization rules
+│   └── WhatIfScenario.cs         # Financial scenarios
+├── Infrastructure/           # Database context
+│   └── AppDbContext.cs           # EF Core + Identity setup
+├── Models/                   # DTOs
+│   └── AuthDtos.cs               # Auth request/response models
+├── wwwroot/                  # Frontend (HTML/CSS/JS)
+│   ├── index.html                # Landing page
+│   ├── login.html                # Login page
+│   ├── register.html             # Registration page
+│   ├── dashboard.html            # Main dashboard
+│   ├── scenarios.html            # What-if scenario planner
+│   ├── admin.html                # Admin panel
+│   ├── settings.html             # Account settings
+│   └── auth.js                   # Auth utilities
+├── docker-compose.yml        # Production configuration
+├── docker-compose.dev.yml    # Development with hot reload
+├── Dockerfile                # Production container
+├── Dockerfile.dev            # Development container
+├── CSV_IMPORT_GUIDE.md      # CSV import instructions
+├── DOCKER_QUICK_START.md    # Docker usage guide
+└── README.md                 # This file
+```
+
+## API Endpoints
+
+### Authentication
+- `POST /api/auth/register` - Create new user account
+- `POST /api/auth/login` - Login and get JWT token
+- `POST /api/auth/logout` - Logout (client-side token removal)
+- `GET /api/auth/me` - Get current user info
+- `POST /api/auth/change-password` - Change password (requires auth)
+
+### Accounts
+- `GET /api/accounts` - List all accounts for current user
+- `GET /api/accounts/{id}` - Get account details
+- `GET /api/accounts/{id}/transactions` - Get transactions for account
+- `POST /api/accounts` - Create account manually
+- `DELETE /api/accounts/{id}` - Delete account
+
+### Statistics
+- `GET /api/stats/overview` - Summary stats (balance, income, expenses, net)
+
+### CSV Import
+- `POST /api/csv/import?provider={provider}` - Upload CSV file
+
+### Categorization Rules
+- `GET /api/rules` - List all rules for current user
+- `POST /api/rules` - Create new rule
+- `PUT /api/rules/{id}` - Update rule
+- `DELETE /api/rules/{id}` - Delete rule
+- `POST /api/rules/apply` - Apply all rules to transactions
+
+### What-If Scenarios
+- `GET /api/scenarios` - List all scenarios
+- `GET /api/scenarios/{id}` - Get scenario details
+- `POST /api/scenarios` - Create new scenario
+- `PUT /api/scenarios/{id}` - Update scenario
+- `DELETE /api/scenarios/{id}` - Delete scenario
+
+### Admin (Requires Admin Role)
+- `GET /api/admin/users` - List all users
+- `GET /api/admin/users/{id}/stats` - Get user statistics
+- `DELETE /api/admin/users/{id}` - Delete user
+- `POST /api/admin/users/{id}/lock` - Lock user account
+- `POST /api/admin/users/{id}/unlock` - Unlock user account
+- `POST /api/admin/users/{id}/roles/{roleName}` - Assign role to user
+- `DELETE /api/admin/users/{id}/roles/{roleName}` - Remove role from user
+  - Providers: `trading212`, `traderepublic`, `raisin`, `revolut`, `ptsb`, `generic`
+
+### Test Data (Development)
+- `POST /api/test/seed` - Generate sample data
+- `DELETE /api/test/clear-data` - Clear all data
+
+## Dashboard Features
+
+### Overview Stats
+- **Total Balance**: Sum across all accounts
+- **Income (30 days)**: Total deposits/credits
+- **Expenses (30 days)**: Total debits/payments
+- **Net (30 days)**: Income - Expenses
+
+### Account Management
+- View all accounts with balances
+- Click to see transaction history
+- Shows provider name and IBAN
+
+### CSV Import
+- Simple upload interface
+- Select bank provider from dropdown
+- Instant feedback on import success
+- Duplicate detection built-in
+
+## Docker Commands
+
+```powershell
+# Start Bankweave
+docker-compose up -d
+
+# Stop Bankweave
+docker-compose down
+
+# View logs
+docker-compose logs -f web
+
+# Rebuild after code changes
+docker-compose build web
+docker-compose up -d
+
+# Check container status
+docker-compose ps
+```
+
+## Database Access
+
+PostgreSQL is exposed on port **5435** (to avoid conflicts with local PostgreSQL).
+
+```powershell
+# Connect with psql
+docker exec -it bankweave-postgres psql -U admin -d bankweavedb
+
+# View tables
+\dt
+
+# View accounts
+SELECT * FROM "FinancialAccounts";
+
+# View transactions
+SELECT * FROM "MoneyMovements";
+```
+
+## Development
+
+### Run Locally (without Docker)
+
+```powershell
+# Start PostgreSQL only
+docker-compose up -d postgres
+
+# Run .NET app
+dotnet run
+```
+
+Access at: **http://localhost:5000**
+
+### Database Migrations
+
+```powershell
+# Install EF Core tools (one time)
+dotnet tool install --global dotnet-ef
+
+# Create new migration
+dotnet ef migrations add MigrationName
+
+# Apply migrations
+dotnet ef database update
+```
+
+## Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `Database__Host` | PostgreSQL host | `localhost` |
+| `Database__Port` | PostgreSQL port | `5432` |
+| `Database__Name` | Database name | `bankweavedb` |
+| `Database__User` | Database user | `admin` |
+| `Database__Password` | Database password | `secretpass` |
+
+All configured in `docker-compose.yml`.
+
+## Troubleshooting
+
+### Port Conflicts
+```powershell
+.\check-ports.ps1  # Check if ports 8082/5435 are available
+```
+
+### Database Connection Failed
+```powershell
+docker-compose ps              # Check container status
+docker-compose logs postgres   # Check PostgreSQL logs
+```
+
+### CSV Import Failed
+- See [CSV_IMPORT_GUIDE.md](CSV_IMPORT_GUIDE.md) for format requirements
+- Check CSV has required columns (Date, Description, Amount)
+- Verify date format is consistent
+- Ensure amounts are numeric (no currency symbols)
+
+### Container Won't Start
+```powershell
+docker-compose down           # Stop all containers
+docker-compose up -d          # Start fresh
+docker-compose logs -f web    # Check startup logs
+```
+
+## Tech Stack
+
+- **.NET 8** - Backend framework
+- **ASP.NET Core** - Web API
+- **PostgreSQL 16** - Database
+- **Entity Framework Core 8** - ORM
+- **Vanilla JavaScript** - Frontend (no frameworks)
+- **Docker & Docker Compose** - Containerization
+
+## Data Privacy
+
+- ✅ All data stored locally on your machine
+- ✅ No external API calls (CSV only)
+- ✅ No bank credentials stored
+- ✅ Works completely offline
+- ✅ You control your financial data
+
+## License
+
+MIT License - Feel free to use for personal financial tracking!
+
+## Support & Documentation
+
+- **CSV Import**: See [CSV_IMPORT_GUIDE.md](CSV_IMPORT_GUIDE.md)
+- **API Docs**: http://localhost:8082/swagger
+- **Dashboard**: http://localhost:8082
+- **Database**: PostgreSQL on port 5435
+
+**Enjoy tracking your finances! 💰**

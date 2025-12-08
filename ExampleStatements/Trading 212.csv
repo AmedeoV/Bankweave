@@ -1,0 +1,10 @@
+Action,Time,Notes,ID,Total,Currency (Total),Currency conversion fee,Currency (Currency conversion fee),Merchant name,Merchant category
+Deposit,2024-12-01 10:00:00,"Bank Transfer",deposit-001,1000.00,"EUR",,,,
+Interest on cash,2024-12-01 08:00:00,"Interest on cash",interest-001,2.15,"EUR",,,,
+Card debit,2024-12-02 14:30:00,,card-001,-45.50,"EUR",,,"Grocery Store","RETAIL_STORES"
+Card debit,2024-12-03 19:20:00,,card-002,-32.00,"EUR",,,"Restaurant","RESTAURANTS"
+Spending cashback,2024-12-03 23:59:59,,cashback-001,0.35,"EUR",,,,
+Card debit,2024-12-05 11:15:00,,card-003,-12.99,"EUR",,,"Coffee Shop","RESTAURANTS"
+Interest on cash,2024-12-05 08:00:00,"Interest on cash",interest-002,2.18,"EUR",,,,
+Card debit,2024-12-07 16:45:00,,card-004,-65.00,"EUR",,,"Online Store","MISCELLANEOUS"
+Spending cashback,2024-12-07 23:59:59,,cashback-002,0.52,"EUR",,,,

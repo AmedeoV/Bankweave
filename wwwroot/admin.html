@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Bankweave</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <script src="/auth.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0a1628 0%, #0f2744 50%, #1a3a52 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: white;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px 30px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            background: linear-gradient(135deg, #06b6d4 0%, #14b8a6 50%, #10b981 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(6, 182, 212, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: none;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .section h2 {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #ffffff;
+        }
+
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .users-table th {
+            text-align: left;
+            padding: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .users-table td {
+            padding: 15px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .users-table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 500;
+            margin-right: 5px;
+        }
+
+        .badge-admin {
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+            color: white;
+        }
+
+        .badge-user {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .badge-locked {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-item .label {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-item .value {
+            color: #06b6d4;
+            font-size: 20px;
+            font-weight: 700;
+            margin-top: 5px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .empty-state h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: rgba(15, 39, 68, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            font-size: 20px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+        }
+
+        .close-btn:hover {
+            color: white;
+        }
+
+        .user-detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .user-detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .user-detail-row .label {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+        }
+
+        .user-detail-row .value {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>🛡️ Admin Panel</h1>
+                <p style="color: rgba(255, 255, 255, 0.6); font-size: 14px; margin-top: 5px;">User Management</p>
+            </div>
+            <div class="nav-buttons">
+                <a href="/dashboard.html" class="btn btn-secondary">← Back to Dashboard</a>
+                <button class="btn btn-secondary" onclick="Auth.logout()">Logout</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Users</h2>
+            <div id="usersContainer">
+                <div class="loading">Loading users...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Details Modal -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>User Details</h3>
+                <button class="close-btn" onclick="closeUserModal()">&times;</button>
+            </div>
+            <div id="userDetailsContent"></div>
+        </div>
+    </div>
+
+    <script>
+        let allUsers = [];
+
+        async function loadUsers() {
+            try {
+                const response = await Auth.fetchWithAuth('/api/admin/users');
+                if (!response.ok) {
+                    if (response.status === 403) {
+                        document.getElementById('usersContainer').innerHTML = `
+                            <div class="empty-state">
+                                <h3>Access Denied</h3>
+                                <p>You don't have permission to access the admin panel.</p>
+                                <a href="/dashboard.html" class="btn" style="margin-top: 20px;">Go to Dashboard</a>
+                            </div>
+                        `;
+                        return;
+                    }
+                    throw new Error('Failed to load users');
+                }
+
+                allUsers = await response.json();
+                renderUsers();
+            } catch (error) {
+                console.error('Error loading users:', error);
+                document.getElementById('usersContainer').innerHTML = `
+                    <div class="empty-state">
+                        <h3>Error Loading Users</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderUsers() {
+            const container = document.getElementById('usersContainer');
+            
+            if (allUsers.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>No Users Found</h3>
+                        <p>There are no users in the system yet.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const isLocked = (user) => user.lockoutEnd && new Date(user.lockoutEnd) > new Date();
+
+            const tableHTML = `
+                <table class="users-table">
+                    <thead>
+                        <tr>
+                            <th>Email</th>
+                            <th>Name</th>
+                            <th>Roles</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${allUsers.map(user => `
+                            <tr>
+                                <td>${user.email}</td>
+                                <td>${user.firstName || ''} ${user.lastName || ''}</td>
+                                <td>
+                                    ${user.roles.map(role => 
+                                        `<span class="badge ${role.toLowerCase() === 'admin' ? 'badge-admin' : 'badge-user'}">${role}</span>`
+                                    ).join('')}
+                                    ${user.roles.length === 0 ? '<span class="badge badge-user">User</span>' : ''}
+                                </td>
+                                <td>
+                                    ${isLocked(user) ? '<span class="badge badge-locked">Locked</span>' : '<span class="badge badge-user">Active</span>'}
+                                </td>
+                                <td>${new Date(user.createdAt).toLocaleDateString()}</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn btn-small btn-secondary" onclick="viewUser('${user.id}')">View</button>
+                                        ${!user.roles.includes('Admin') ? `
+                                            <button class="btn btn-small" onclick="toggleAdmin('${user.id}', ${!user.roles.includes('Admin')})">
+                                                Make Admin
+                                            </button>
+                                        ` : ''}
+                                        ${isLocked(user) ? `
+                                            <button class="btn btn-small" onclick="unlockUser('${user.id}')">Unlock</button>
+                                        ` : `
+                                            <button class="btn btn-small btn-danger" onclick="lockUser('${user.id}')">Lock</button>
+                                        `}
+                                        <button class="btn btn-small btn-danger" onclick="deleteUser('${user.id}', '${user.email}')">Delete</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = tableHTML;
+        }
+
+        async function viewUser(userId) {
+            try {
+                const user = allUsers.find(u => u.id === userId);
+                if (!user) return;
+
+                const statsResponse = await Auth.fetchWithAuth(`/api/admin/users/${userId}/stats`);
+                const stats = await statsResponse.json();
+
+                const isLocked = user.lockoutEnd && new Date(user.lockoutEnd) > new Date();
+
+                const content = `
+                    <div class="user-detail-row">
+                        <span class="label">Email:</span>
+                        <span class="value">${user.email}</span>
+                    </div>
+                    <div class="user-detail-row">
+                        <span class="label">Name:</span>
+                        <span class="value">${user.firstName || ''} ${user.lastName || ''}</span>
+                    </div>
+                    <div class="user-detail-row">
+                        <span class="label">Roles:</span>
+                        <span class="value">
+                            ${user.roles.map(role => 
+                                `<span class="badge ${role.toLowerCase() === 'admin' ? 'badge-admin' : 'badge-user'}">${role}</span>`
+                            ).join('')}
+                            ${user.roles.length === 0 ? '<span class="badge badge-user">User</span>' : ''}
+                        </span>
+                    </div>
+                    <div class="user-detail-row">
+                        <span class="label">Status:</span>
+                        <span class="value">
+                            ${isLocked ? '<span class="badge badge-locked">Locked</span>' : '<span class="badge badge-user">Active</span>'}
+                        </span>
+                    </div>
+                    <div class="user-detail-row">
+                        <span class="label">Email Confirmed:</span>
+                        <span class="value">${user.emailConfirmed ? 'Yes' : 'No'}</span>
+                    </div>
+                    <div class="user-detail-row">
+                        <span class="label">Created:</span>
+                        <span class="value">${new Date(user.createdAt).toLocaleString()}</span>
+                    </div>
+                    
+                    <h3 style="margin-top: 30px; margin-bottom: 15px; font-size: 16px;">Statistics</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="label">Accounts</div>
+                            <div class="value">${stats.accountCount}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="label">Transactions</div>
+                            <div class="value">${stats.transactionCount}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="label">Rules</div>
+                            <div class="value">${stats.ruleCount}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="label">Scenarios</div>
+                            <div class="value">${stats.scenarioCount}</div>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('userDetailsContent').innerHTML = content;
+                document.getElementById('userModal').classList.add('show');
+            } catch (error) {
+                console.error('Error loading user details:', error);
+                alert('Failed to load user details');
+            }
+        }
+
+        function closeUserModal() {
+            document.getElementById('userModal').classList.remove('show');
+        }
+
+        async function toggleAdmin(userId, makeAdmin) {
+            const action = makeAdmin ? 'add' : 'remove';
+            const confirmMsg = makeAdmin 
+                ? 'Are you sure you want to make this user an admin?' 
+                : 'Are you sure you want to remove admin privileges from this user?';
+
+            if (!confirm(confirmMsg)) return;
+
+            try {
+                const method = makeAdmin ? 'POST' : 'DELETE';
+                const response = await Auth.fetchWithAuth(`/api/admin/users/${userId}/roles/Admin`, {
+                    method
+                });
+
+                if (response.ok) {
+                    alert(makeAdmin ? 'User is now an admin' : 'Admin role removed');
+                    await loadUsers();
+                } else {
+                    const error = await response.json();
+                    alert(error.message || 'Failed to update user role');
+                }
+            } catch (error) {
+                console.error('Error updating role:', error);
+                alert('Failed to update user role');
+            }
+        }
+
+        async function lockUser(userId) {
+            if (!confirm('Are you sure you want to lock this user?')) return;
+
+            try {
+                const response = await Auth.fetchWithAuth(`/api/admin/users/${userId}/lock`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ permanent: false, days: 7 })
+                });
+
+                if (response.ok) {
+                    alert('User locked successfully');
+                    await loadUsers();
+                } else {
+                    const error = await response.json();
+                    alert(error.message || 'Failed to lock user');
+                }
+            } catch (error) {
+                console.error('Error locking user:', error);
+                alert('Failed to lock user');
+            }
+        }
+
+        async function unlockUser(userId) {
+            try {
+                const response = await Auth.fetchWithAuth(`/api/admin/users/${userId}/unlock`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    alert('User unlocked successfully');
+                    await loadUsers();
+                } else {
+                    const error = await response.json();
+                    alert(error.message || 'Failed to unlock user');
+                }
+            } catch (error) {
+                console.error('Error unlocking user:', error);
+                alert('Failed to unlock user');
+            }
+        }
+
+        async function deleteUser(userId, email) {
+            if (!confirm(`Are you sure you want to delete ${email}? This action cannot be undone and will delete all their data.`)) return;
+
+            try {
+                const response = await Auth.fetchWithAuth(`/api/admin/users/${userId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    alert('User deleted successfully');
+                    await loadUsers();
+                } else {
+                    const error = await response.json();
+                    alert(error.message || 'Failed to delete user');
+                }
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                alert('Failed to delete user');
+            }
+        }
+
+        // Close modal on outside click
+        document.getElementById('userModal').addEventListener('click', (e) => {
+            if (e.target.id === 'userModal') {
+                closeUserModal();
+            }
+        });
+
+        // Load users on page load
+        loadUsers();
+    </script>
+</body>
+</html>

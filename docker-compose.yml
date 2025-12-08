@@ -1,0 +1,53 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: bankweave-postgres-prod
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-bankweavedb}
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secretpass}
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    ports:
+      - "5436:5432"
+    networks:
+      - bankweave-network-prod
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin} -d ${POSTGRES_DB:-bankweavedb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bankweave-web-prod
+    ports:
+      - "8083:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - Database__Host=postgres
+      - Database__Port=5432
+      - Database__Name=${POSTGRES_DB:-bankweavedb}
+      - Database__User=${POSTGRES_USER:-admin}
+      - Database__Password=${POSTGRES_PASSWORD:-secretpass}
+      - Jwt__Secret=${JWT_SECRET:-YourSuperSecretKeyThatIsAtLeast32CharactersLong!}
+      - Jwt__Issuer=${JWT_ISSUER:-Bankweave}
+      - Jwt__Audience=${JWT_AUDIENCE:-BankweaveUsers}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - bankweave-network-prod
+    restart: unless-stopped
+
+volumes:
+  postgres_data_prod:
+
+networks:
+  bankweave-network-prod:
+    driver: bridge
