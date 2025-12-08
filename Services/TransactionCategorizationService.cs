@@ -38,16 +38,16 @@ public class TransactionCategorizationService
         ["Cashback"] = new() { "cashback", "cash back", "reward", "refund" }
     };
 
-    public async Task<string> CategorizeTransactionAsync(string description, string? counterpartyName, decimal amount)
+    public async Task<string> CategorizeTransactionAsync(string userId, string description, string? counterpartyName, decimal amount)
     {
-        var result = await CategorizeTransactionWithDetailsAsync(description, counterpartyName, amount);
+        var result = await CategorizeTransactionWithDetailsAsync(userId, description, counterpartyName, amount);
         return result.Category;
     }
 
-    public async Task<(string Category, bool MarkAsEssential)> CategorizeTransactionWithDetailsAsync(string description, string? counterpartyName, decimal amount)
+    public async Task<(string Category, bool MarkAsEssential)> CategorizeTransactionWithDetailsAsync(string userId, string description, string? counterpartyName, decimal amount)
     {
         // Priority 1: Check user-defined rules (highest priority - overrides everything)
-        var ruleMatch = await _ruleService.CategorizeByRulesWithDetailsAsync(description, amount);
+        var ruleMatch = await _ruleService.CategorizeByRulesWithDetailsAsync(userId, description, amount);
         if (ruleMatch != null && !string.IsNullOrEmpty(ruleMatch.Category))
         {
             return (ruleMatch.Category, ruleMatch.MarkAsEssential);

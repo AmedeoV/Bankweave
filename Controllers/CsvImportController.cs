@@ -118,6 +118,7 @@ public class CsvImportController : ControllerBase
                 if (string.IsNullOrEmpty(txn.Category))
                 {
                     txn.Category = await _categorizationService.CategorizeTransactionAsync(
+                        userId,
                         txn.Description, 
                         txn.CounterpartyName, 
                         txn.Amount);
@@ -337,6 +338,7 @@ public class CsvImportController : ControllerBase
                 if (string.IsNullOrEmpty(transaction.Category))
                 {
                     transaction.Category = await _categorizationService.CategorizeTransactionAsync(
+                        userId,
                         transaction.Description, 
                         transaction.CounterpartyName, 
                         transaction.Amount);

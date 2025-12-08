@@ -28,22 +28,20 @@ public class RuleBasedCategorizationService
     }
 
     /// <summary>
-    /// Get all categorization rules, ordered by priority (highest first)
+    /// Get all categorization rules for a specific user, ordered by priority (highest first)
     /// </summary>
-    public async Task<List<CategorizationRule>> GetRulesAsync()
+    public async Task<List<CategorizationRule>> GetRulesAsync(string userId)
     {
-        if (_cachedRules != null && DateTime.UtcNow - _cacheTime < _cacheExpiry)
-        {
-            return _cachedRules;
-        }
-
-        _cachedRules = await _context.CategorizationRules
+        // Note: Cache disabled for now to ensure proper user isolation
+        // TODO: Implement per-user caching
+        
+        var rules = await _context.CategorizationRules
+            .Where(r => r.UserId == userId)
             .OrderByDescending(r => r.Priority)
             .ThenBy(r => r.CreatedAt)
             .ToListAsync();
         
-        _cacheTime = DateTime.UtcNow;
-        return _cachedRules;
+        return rules;
     }
 
     /// <summary>
@@ -58,23 +56,23 @@ public class RuleBasedCategorizationService
     /// Try to categorize a transaction based on rules
     /// Returns the category if a rule matches, null otherwise
     /// </summary>
-    public async Task<string?> CategorizeByRulesAsync(string description, decimal? amount = null)
+    public async Task<string?> CategorizeByRulesAsync(string userId, string description, decimal? amount = null)
     {
-        var result = await CategorizeByRulesWithDetailsAsync(description, amount);
+        var result = await CategorizeByRulesWithDetailsAsync(userId, description, amount);
         return result?.Category;
     }
 
     /// <summary>
     /// Try to categorize a transaction based on rules, returning full match details
     /// </summary>
-    public async Task<RuleMatchResult?> CategorizeByRulesWithDetailsAsync(string description, decimal? amount = null)
+    public async Task<RuleMatchResult?> CategorizeByRulesWithDetailsAsync(string userId, string description, decimal? amount = null)
     {
         if (string.IsNullOrWhiteSpace(description))
         {
             return null;
         }
 
-        var rules = await GetRulesAsync();
+        var rules = await GetRulesAsync(userId);
 
         foreach (var rule in rules)
         {
@@ -135,18 +133,19 @@ public class RuleBasedCategorizationService
     }
 
     /// <summary>
-    /// Apply rules to ALL existing transactions (overrides current categories)
+    /// Apply rules to ALL existing transactions for a specific user (overrides current categories)
     /// </summary>
-    public async Task<int> ApplyRulesToExistingTransactionsAsync()
+    public async Task<int> ApplyRulesToExistingTransactionsAsync(string userId)
     {
         var transactions = await _context.MoneyMovements
+            .Where(m => m.Account.UserId == userId)
             .ToListAsync();
 
         int categorizedCount = 0;
 
         foreach (var transaction in transactions)
         {
-            var result = await CategorizeByRulesWithDetailsAsync(transaction.Description ?? "", transaction.Amount);
+            var result = await CategorizeByRulesWithDetailsAsync(userId, transaction.Description ?? "", transaction.Amount);
             if (result != null && !string.IsNullOrEmpty(result.Category))
             {
                 transaction.Category = result.Category;
@@ -168,6 +167,7 @@ public class RuleBasedCategorizationService
     /// Add a new categorization rule
     /// </summary>
     public async Task<CategorizationRule> AddRuleAsync(
+        string userId,
         string pattern, 
         string category, 
         bool isRegex = false, 
@@ -179,6 +179,7 @@ public class RuleBasedCategorizationService
         var rule = new CategorizationRule
         {
             Id = Guid.NewGuid(),
+            UserId = userId,
             Pattern = pattern,
             Category = category,
             IsRegex = isRegex,
@@ -201,9 +202,10 @@ public class RuleBasedCategorizationService
     /// <summary>
     /// Delete a categorization rule
     /// </summary>
-    public async Task<bool> DeleteRuleAsync(Guid ruleId)
+    public async Task<bool> DeleteRuleAsync(string userId, Guid ruleId)
     {
-        var rule = await _context.CategorizationRules.FindAsync(ruleId);
+        var rule = await _context.CategorizationRules
+            .FirstOrDefaultAsync(r => r.Id == ruleId && r.UserId == userId);
         if (rule == null)
         {
             return false;
@@ -222,6 +224,7 @@ public class RuleBasedCategorizationService
     /// Update an existing rule
     /// </summary>
     public async Task<CategorizationRule?> UpdateRuleAsync(
+        string userId,
         Guid ruleId,
         string? pattern = null,
         string? category = null,
@@ -231,7 +234,8 @@ public class RuleBasedCategorizationService
         bool? markAsEssential = null,
         string? transactionType = null)
     {
-        var rule = await _context.CategorizationRules.FindAsync(ruleId);
+        var rule = await _context.CategorizationRules
+            .FirstOrDefaultAsync(r => r.Id == ruleId && r.UserId == userId);
         if (rule == null)
         {
             return null;

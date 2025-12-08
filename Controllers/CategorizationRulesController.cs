@@ -24,7 +24,10 @@ public class CategorizationRulesController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetRules()
     {
-        var rules = await _ruleService.GetRulesAsync();
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized();
+        
+        var rules = await _ruleService.GetRulesAsync(userId);
         return Ok(rules);
     }
 
@@ -41,7 +44,11 @@ public class CategorizationRulesController : ControllerBase
             return BadRequest(new { error = "Category is required" });
         }
 
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized();
+        
         var rule = await _ruleService.AddRuleAsync(
+            userId,
             request.Pattern,
             request.Category,
             request.IsRegex,
@@ -56,7 +63,11 @@ public class CategorizationRulesController : ControllerBase
     [HttpPut("{ruleId}")]
     public async Task<IActionResult> UpdateRule(Guid ruleId, [FromBody] UpdateRuleRequest request)
     {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized();
+        
         var rule = await _ruleService.UpdateRuleAsync(
+            userId,
             ruleId,
             request.Pattern,
             request.Category,
@@ -77,7 +88,10 @@ public class CategorizationRulesController : ControllerBase
     [HttpDelete("{ruleId}")]
     public async Task<IActionResult> DeleteRule(Guid ruleId)
     {
-        var success = await _ruleService.DeleteRuleAsync(ruleId);
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized();
+        
+        var success = await _ruleService.DeleteRuleAsync(userId, ruleId);
         
         if (!success)
         {
@@ -90,7 +104,10 @@ public class CategorizationRulesController : ControllerBase
     [HttpPost("apply")]
     public async Task<IActionResult> ApplyRulesToExisting()
     {
-        var count = await _ruleService.ApplyRulesToExistingTransactionsAsync();
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized();
+        
+        var count = await _ruleService.ApplyRulesToExistingTransactionsAsync(userId);
         return Ok(new { 
             message = $"Applied rules to {count} transactions",
             count = count
