@@ -1,0 +1,76 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, bankweave]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Create .env file
+        run: |
+          cat > .env << EOF
+          POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          JWT_ISSUER=Bankweave
+          JWT_AUDIENCE=BankweaveUsers
+          ASPNETCORE_ENVIRONMENT=Production
+          EOF
+      
+      - name: Stop existing containers
+        run: |
+          docker-compose down || true
+      
+      - name: Deploy with Docker Compose
+        run: |
+          docker-compose up -d --build
+      
+      - name: Wait for services to start
+        run: |
+          echo "Waiting for services to be ready..."
+          sleep 15
+      
+      - name: Check container status
+        run: |
+          docker-compose ps
+      
+      - name: Check application health
+        run: |
+          echo "Checking application health..."
+          for i in {1..30}; do
+            if curl -f http://localhost:8083 > /dev/null 2>&1; then
+              echo "✅ Application is healthy!"
+              exit 0
+            fi
+            echo "Waiting for application... ($i/30)"
+            sleep 2
+          done
+          echo "❌ Application health check failed"
+          docker-compose logs web
+          exit 1
+      
+      - name: Test Nginx configuration
+        run: |
+          sudo nginx -t
+      
+      - name: Reload Nginx
+        run: |
+          sudo systemctl reload nginx
+      
+      - name: Deployment summary
+        run: |
+          echo "=========================================="
+          echo "✅ Deployment successful!"
+          echo "=========================================="
+          echo "URL: https://bankweave.step0fail.com"
+          echo "Containers running:"
+          docker-compose ps --format "table {{.Name}}\t{{.Status}}"
+          echo "=========================================="
