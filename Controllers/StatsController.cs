@@ -137,7 +137,8 @@ public class StatsController : ControllerBase
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var query = _dbContext.MoneyMovements
             .Where(m => m.Account.UserId == userId)
-            .Where(m => m.TransactionDate >= queryStartDate && m.Amount < 0);
+            .Where(m => m.TransactionDate >= queryStartDate && m.Amount < 0)
+            .Where(m => m.Category != "Transfer" && m.Category != "Transfer In" && m.Category != "Transfers" && m.Category != "Balance Payment");
             
         if (queryEndDate.HasValue)
         {
@@ -390,7 +391,8 @@ public class StatsController : ControllerBase
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var query = _dbContext.MoneyMovements
             .Where(m => m.Account.UserId == userId)
-            .Where(m => m.TransactionDate >= queryStartDate && m.Amount < 0 && m.IsEssentialExpense);
+            .Where(m => m.TransactionDate >= queryStartDate && m.Amount < 0 && m.IsEssentialExpense)
+            .Where(m => m.Category != "Transfer" && m.Category != "Transfer In" && m.Category != "Transfers" && m.Category != "Balance Payment");
             
         if (queryEndDate.HasValue)
         {
