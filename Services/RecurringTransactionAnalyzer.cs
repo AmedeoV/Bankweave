@@ -15,6 +15,7 @@ public class RecurringTransactionAnalyzer
     }
 
     public async Task<RecurringTransactionsResult> AnalyzeRecurringTransactionsAsync(
+        string userId,
         int? monthsToAnalyze = null, 
         DateTime? startDate = null, 
         DateTime? endDate = null)
@@ -35,6 +36,7 @@ public class RecurringTransactionAnalyzer
         }
         
         var query = _dbContext.MoneyMovements
+            .Where(m => m.Account.UserId == userId)
             .Where(m => m.TransactionDate >= cutoffDate)
             .Where(m => m.Category != "Transfer" && m.Category != "Transfer In" && m.Category != "Transfers" && m.Category != "Balance Payment");
             

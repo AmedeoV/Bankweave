@@ -33,7 +33,8 @@ public class StatsController : ControllerBase
         [FromQuery] DateTime? startDate = null,
         [FromQuery] DateTime? endDate = null)
     {
-        var accounts = await _dbContext.FinancialAccounts.ToListAsync();
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var accounts = await _dbContext.FinancialAccounts.Where(a => a.UserId == userId).ToListAsync();
         var totalBalance = accounts.Where(a => !a.ExcludeFromTotal).Sum(a => a.CurrentBalance);
 
         // Determine date range
@@ -55,6 +56,7 @@ public class StatsController : ControllerBase
         }
 
         var query = _dbContext.MoneyMovements
+            .Where(m => m.Account.UserId == userId)
             .Where(m => m.TransactionDate >= queryStartDate)
             .Where(m => m.Category != "Transfer" && m.Category != "Transfer In" && m.Category != "Transfers" && m.Category != "Balance Payment");
             
@@ -83,8 +85,10 @@ public class StatsController : ControllerBase
     [HttpGet("monthly")]
     public async Task<IActionResult> GetMonthlyStats([FromQuery] int months = 6)
     {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var startDate = DateTime.UtcNow.AddMonths(-months);
         var transactions = await _dbContext.MoneyMovements
+            .Where(m => m.Account.UserId == userId)
             .Where(m => m.TransactionDate >= startDate)
             .Where(m => m.Category != "Transfer" && m.Category != "Transfer In" && m.Category != "Transfers" && m.Category != "Balance Payment")
             .ToListAsync();
@@ -130,7 +134,9 @@ public class StatsController : ControllerBase
             queryStartDate = DateTime.UtcNow.AddDays(-30);
         }
         
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var query = _dbContext.MoneyMovements
+            .Where(m => m.Account.UserId == userId)
             .Where(m => m.TransactionDate >= queryStartDate && m.Amount < 0);
             
         if (queryEndDate.HasValue)
@@ -177,7 +183,9 @@ public class StatsController : ControllerBase
             queryStartDate = DateTime.UtcNow.AddDays(-30);
         }
         
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var query = _dbContext.MoneyMovements
+            .Where(m => m.Account.UserId == userId)
             .Where(m => m.TransactionDate >= queryStartDate && m.Amount > 0)
             .Where(m => m.Category != "Transfer" && m.Category != "Transfer In" && m.Category != "Transfers" && m.Category != "Balance Payment");
             
@@ -205,8 +213,10 @@ public class StatsController : ControllerBase
     [HttpGet("top-merchants")]
     public async Task<IActionResult> GetTopMerchants([FromQuery] int days = 30, [FromQuery] int limit = 10)
     {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var startDate = DateTime.UtcNow.AddDays(-days);
         var transactions = await _dbContext.MoneyMovements
+            .Where(m => m.Account.UserId == userId)
             .Where(m => m.TransactionDate >= startDate && m.Amount < 0 && m.CounterpartyName != null)
             .ToListAsync();
 
@@ -229,7 +239,8 @@ public class StatsController : ControllerBase
     [HttpPost("snapshot")]
     public async Task<IActionResult> CreateBalanceSnapshot()
     {
-        var accounts = await _dbContext.FinancialAccounts.ToListAsync();
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var accounts = await _dbContext.FinancialAccounts.Where(a => a.UserId == userId).ToListAsync();
         var totalBalance = accounts.Where(a => !a.ExcludeFromTotal).Sum(a => a.CurrentBalance);
 
         // Store breakdown of each account for detailed analysis
@@ -244,6 +255,7 @@ public class StatsController : ControllerBase
         var snapshot = new BalanceSnapshot
         {
             Id = Guid.NewGuid(),
+            UserId = userId,
             Timestamp = DateTime.UtcNow,
             TotalBalance = totalBalance,
             AccountBalances = JsonSerializer.Serialize(accountBalances)
@@ -267,10 +279,11 @@ public class StatsController : ControllerBase
         [FromQuery] DateTime? startDate = null, 
         [FromQuery] DateTime? endDate = null)
     {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         DateTime? utcStartDate = startDate.HasValue ? DateTime.SpecifyKind(startDate.Value, DateTimeKind.Utc) : null;
         DateTime? utcEndDate = endDate.HasValue ? DateTime.SpecifyKind(endDate.Value, DateTimeKind.Utc).AddDays(1).AddSeconds(-1) : null;
         
-        var result = await _recurringAnalyzer.AnalyzeRecurringTransactionsAsync(months, utcStartDate, utcEndDate);
+        var result = await _recurringAnalyzer.AnalyzeRecurringTransactionsAsync(userId, months, utcStartDate, utcEndDate);
         
         return Ok(new
         {
@@ -326,7 +339,9 @@ public class StatsController : ControllerBase
             queryStartDate = DateTime.UtcNow.AddMonths(-12);
         }
         
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var query = _dbContext.BalanceSnapshots
+            .Where(s => s.UserId == userId)
             .Where(s => s.Timestamp >= queryStartDate);
             
         if (endDate.HasValue)
@@ -372,7 +387,9 @@ public class StatsController : ControllerBase
             queryStartDate = DateTime.UtcNow.AddDays(-30);
         }
         
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var query = _dbContext.MoneyMovements
+            .Where(m => m.Account.UserId == userId)
             .Where(m => m.TransactionDate >= queryStartDate && m.Amount < 0 && m.IsEssentialExpense);
             
         if (queryEndDate.HasValue)
