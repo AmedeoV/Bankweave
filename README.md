@@ -1,21 +1,56 @@
 # Bankweave 💰
 
-A personal financial dashboard with user authentication that imports transactions via CSV and provides analytics for your accounts.
+A privacy-focused personal financial dashboard with **zero-knowledge encryption** that keeps your financial data secure even from database administrators.
 
-## Features
+## ✨ Key Features
 
-- 🔐 **User Authentication**: Secure login/register with JWT tokens and password management
-- 👥 **Multi-User Support**: Each user has their own isolated financial data
-- 🛡️ **Admin Panel**: User management interface for administrators
-- 📂 **CSV Import**: Support for Trading212, Trade Republic, Raisin, Revolut, PTSB, and generic CSV formats
-- 📊 **Financial Statistics**: Income, expenses, net worth, and balance tracking
-- 🎯 **Categorization Rules**: Auto-categorize transactions with custom rules
-- 📈 **What-If Scenarios**: Plan future expenses and see projected balances
-- 📱 **Web Dashboard**: Clean, mobile-friendly interface with professional teal theme
-- 🐳 **Docker Ready**: One-command deployment with dev and production modes
-- 🔥 **Hot Reload**: Development mode with automatic code reloading
-- 🔒 **Privacy First**: All data stays on your machine
-- 💾 **PostgreSQL Backend**: Reliable data storage with ASP.NET Core Identity
+### 🔐 Security & Privacy
+- **🔒 Zero-Knowledge Encryption**: Your financial data is encrypted client-side with AES-GCM-256
+- **🔑 Password-Derived Keys**: Encryption keys derived from your password (never stored)
+- **🛡️ User Authentication**: Secure JWT-based authentication
+- **👤 Multi-User Support**: Complete data isolation between users
+- **🚫 No External Services**: All data stays on your machine
+
+### 💰 Financial Management
+- **📂 CSV Import**: Support for Trading212, Trade Republic, Raisin, Revolut, PTSB, and generic CSV formats
+- **📊 Rich Analytics**: Income, expenses, net worth, balance tracking, and trends
+- **🎯 Smart Categorization**: Auto-categorize transactions with custom rules
+- **📈 What-If Scenarios**: Plan future expenses and see projected balances
+- **💡 Insights**: Recurring transactions, essential expenses, and spending patterns
+
+### 🚀 Technology
+- **📱 Modern Web UI**: Clean, mobile-friendly interface
+- **🐳 Docker Ready**: One-command deployment
+- **💾 PostgreSQL**: Reliable data storage
+- **⚡ Fast & Responsive**: Built with .NET 8 and vanilla JavaScript
+
+## 🔐 Zero-Knowledge Encryption
+
+Bankweave implements Signal-style zero-knowledge encryption:
+
+**How it works:**
+1. Your password derives an encryption key using PBKDF2 (100,000 iterations)
+2. All sensitive transaction data is encrypted in your browser before reaching the server
+3. The server stores only encrypted blobs - **completely unreadable** even with database access
+4. Only you can decrypt your data with your password
+
+**What's encrypted:**
+- Transaction descriptions
+- Transaction amounts
+- Merchant/counterparty names
+- Categories
+
+**What's NOT encrypted** (needed for queries):
+- Transaction dates
+- Account associations
+- Timestamps
+
+**Security guarantees:**
+- ✅ Encryption key **never** leaves your browser
+- ✅ Server **never** sees plaintext financial data
+- ✅ Database administrators **cannot** read your transactions
+- ✅ Even if database is compromised, data remains secure
+- ✅ Key stored only in browser session (cleared on logout)
 
 ## Supported Banks
 
@@ -136,11 +171,22 @@ Bankweave/
 ## API Endpoints
 
 ### Authentication
-- `POST /api/auth/register` - Create new user account
-- `POST /api/auth/login` - Login and get JWT token
+- `POST /api/auth/register` - Create new user account (returns encryption salt)
+- `POST /api/auth/login` - Login and get JWT token (returns encryption salt)
 - `POST /api/auth/logout` - Logout (client-side token removal)
 - `GET /api/auth/me` - Get current user info
 - `POST /api/auth/change-password` - Change password (requires auth)
+
+### Encrypted Transactions (Zero-Knowledge)
+- `GET /api/encryptedtransactions` - List all encrypted transactions
+- `GET /api/encryptedtransactions/{id}` - Get single encrypted transaction
+- `POST /api/encryptedtransactions` - Create encrypted transaction
+- `PUT /api/encryptedtransactions/{id}` - Update encrypted transaction
+- `DELETE /api/encryptedtransactions/{id}` - Delete encrypted transaction
+
+### Encryption Migration
+- `GET /api/encryptionmigration/status` - Check encryption status (encrypted vs unencrypted count)
+- `POST /api/encryptionmigration/migrate` - Batch encrypt existing transactions
 
 ### Accounts
 - `GET /api/accounts` - List all accounts for current user
@@ -154,6 +200,7 @@ Bankweave/
 
 ### CSV Import
 - `POST /api/csv/import?provider={provider}` - Upload CSV file
+  - Providers: `trading212`, `traderepublic`, `raisin`, `revolut`, `ptsb`, `generic`
 
 ### Categorization Rules
 - `GET /api/rules` - List all rules for current user
@@ -177,7 +224,10 @@ Bankweave/
 - `POST /api/admin/users/{id}/unlock` - Unlock user account
 - `POST /api/admin/users/{id}/roles/{roleName}` - Assign role to user
 - `DELETE /api/admin/users/{id}/roles/{roleName}` - Remove role from user
-  - Providers: `trading212`, `traderepublic`, `raisin`, `revolut`, `ptsb`, `generic`
+
+### Health & Diagnostics
+- `GET /api/health/db` - Database connection and migration status
+- `POST /api/health/migrate` - Apply pending migrations
 
 ### Test Data (Development)
 - `POST /api/test/seed` - Generate sample data
@@ -308,19 +358,53 @@ docker-compose logs -f web    # Check startup logs
 ## Tech Stack
 
 - **.NET 8** - Backend framework
-- **ASP.NET Core** - Web API
-- **PostgreSQL 16** - Database
-- **Entity Framework Core 8** - ORM
-- **Vanilla JavaScript** - Frontend (no frameworks)
+- **ASP.NET Core** - Web API with JWT authentication
+- **PostgreSQL 16** - Encrypted data storage
+- **Entity Framework Core 8** - ORM with user isolation
+- **Web Crypto API** - Client-side AES-GCM-256 encryption
+- **Vanilla JavaScript** - Zero-dependency frontend
 - **Docker & Docker Compose** - Containerization
 
-## Data Privacy
+## Security & Data Privacy
 
+### 🔐 Zero-Knowledge Encryption
+- **AES-GCM-256 encryption** with 96-bit nonces for authenticated encryption
+- **PBKDF2 key derivation** (100,000 iterations, SHA-256) from user password
+- **16-byte random salt** per user for key derivation
+- **Client-side only**: Encryption/decryption happens in your browser
+- **Server never sees keys**: Your password-derived key never leaves your device
+- **Session storage**: Keys stored in browser memory, cleared on logout
+- **Database admin cannot read**: All sensitive data stored as encrypted blobs
+
+### 🛡️ Privacy Guarantees
 - ✅ All data stored locally on your machine
 - ✅ No external API calls (CSV only)
 - ✅ No bank credentials stored
 - ✅ Works completely offline
-- ✅ You control your financial data
+- ✅ **Encrypted transactions**: Even database backups are encrypted
+- ✅ **Multi-user isolation**: Users cannot see each other's data
+- ✅ **End-to-end privacy**: Only you can decrypt your financial information
+
+### 🔒 What's Protected
+**Encrypted fields:**
+- Transaction descriptions
+- Transaction amounts  
+- Merchant/counterparty names
+- Transaction categories
+
+**Unencrypted (for queries):**
+- Transaction dates
+- Account references
+- User IDs
+- Timestamps
+
+### 📊 Migration for Existing Users
+If you have existing unencrypted data, you'll see a one-time migration prompt:
+1. Dashboard detects unencrypted transactions
+2. Click "Encrypt My Data" button
+3. All transactions encrypted in browser and re-uploaded
+4. Original plaintext data deleted from database
+5. **Note**: This is irreversible - encryption cannot be undone
 
 ## License
 
@@ -329,8 +413,10 @@ MIT License - Feel free to use for personal financial tracking!
 ## Support & Documentation
 
 - **CSV Import**: See [CSV_IMPORT_GUIDE.md](CSV_IMPORT_GUIDE.md)
+- **Trading212 Specific**: See [TRADING212_CSV_UI_GUIDE.md](TRADING212_CSV_UI_GUIDE.md)
+- **Docker Setup**: See [DOCKER_QUICK_START.md](DOCKER_QUICK_START.md)
 - **API Docs**: http://localhost:8082/swagger
 - **Dashboard**: http://localhost:8082
 - **Database**: PostgreSQL on port 5435
 
-**Enjoy tracking your finances! 💰**
+**Enjoy secure financial tracking! 💰🔐**
