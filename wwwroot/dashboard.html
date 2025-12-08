@@ -629,8 +629,11 @@
             }
 
             .header {
-                padding: 15px 20px;
+                padding: 15px;
                 margin-bottom: 15px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
             }
 
             .header h1 {
@@ -642,9 +645,24 @@
                 margin-top: 5px;
             }
 
+            .user-menu {
+                width: 100%;
+                justify-content: flex-start;
+            }
+
+            .logout-btn {
+                width: 100%;
+                justify-content: center;
+                min-height: 44px;
+            }
+
             .section {
-                padding: 20px 15px;
+                padding: 15px;
                 margin-bottom: 15px;
+            }
+
+            .section h2 {
+                font-size: 18px;
             }
 
             .stats-grid {
@@ -1139,10 +1157,10 @@
 <body>
     <div class="container">
         <div class="header">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <h1 style="display: flex; align-items: center; gap: 12px;">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" style="width: 36px; height: 36px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 15px;">
+                <div style="flex: 1; min-width: 200px;">
+                    <h1 style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" style="width: 36px; height: 36px; flex-shrink: 0;">
                             <defs>
                                 <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                                     <stop offset="0%" style="stop-color:#06b6d4;stop-opacity:1" />
@@ -1159,7 +1177,7 @@
                     </h1>
                     <p>Your personal financial dashboard</p>
                 </div>
-                <div class="user-menu">
+                <div class="user-menu" style="flex-wrap: wrap; min-width: fit-content;">
                     <div class="user-info" id="userInfo">
                         <span id="userName"></span>
                     </div>

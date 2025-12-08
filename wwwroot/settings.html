@@ -208,6 +208,108 @@
             font-weight: 500;
             margin-top: 5px;
         }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                max-width: 100%;
+            }
+
+            .header {
+                padding: 15px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+
+            .nav-buttons {
+                width: 100%;
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                min-height: 44px;
+                padding: 12px 16px;
+            }
+
+            .section {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+
+            .section h2 {
+                font-size: 18px;
+                margin-bottom: 15px;
+            }
+
+            .form-group {
+                margin-bottom: 15px;
+            }
+
+            .form-group label {
+                font-size: 13px;
+                margin-bottom: 6px;
+            }
+
+            .form-group input {
+                padding: 12px;
+                font-size: 14px;
+                min-height: 44px;
+            }
+
+            .password-requirements {
+                font-size: 12px;
+            }
+
+            .password-requirements li {
+                padding: 3px 0;
+            }
+
+            .user-info-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .info-item {
+                padding: 10px;
+            }
+
+            .info-item .label {
+                font-size: 10px;
+            }
+
+            .info-item .value {
+                font-size: 14px;
+            }
+
+            .message {
+                padding: 12px;
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .section {
+                padding: 12px;
+            }
+
+            .section h2 {
+                font-size: 16px;
+            }
+        }
     </style>
 </head>
 <body>
