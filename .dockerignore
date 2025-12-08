@@ -19,7 +19,6 @@ obj/
 .vs/
 .vscode/
 publish/
-Migrations/
 grey_salt_git/
 grey_salt_repo/
 ExampleStatements/
