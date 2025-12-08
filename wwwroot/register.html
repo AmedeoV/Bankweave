@@ -259,6 +259,7 @@
         </div>
     </div>
 
+    <script src="/crypto.js"></script>
     <script>
         const registerForm = document.getElementById('registerForm');
         const errorMessage = document.getElementById('errorMessage');
@@ -311,6 +312,22 @@
                     localStorage.setItem('userEmail', data.email);
                     if (data.firstName) localStorage.setItem('userFirstName', data.firstName);
                     if (data.lastName) localStorage.setItem('userLastName', data.lastName);
+                    
+                    // Initialize encryption with user's password and salt
+                    if (data.encryptionSalt) {
+                        try {
+                            await window.cryptoManager.initialize(password, data.encryptionSalt);
+                            localStorage.setItem('encryptionSalt', data.encryptionSalt);
+                            console.log('Encryption initialized successfully');
+                        } catch (error) {
+                            console.error('Failed to initialize encryption:', error);
+                            errorMessage.textContent = 'Failed to initialize encryption. Please try again.';
+                            errorMessage.classList.add('show');
+                            registerBtn.disabled = false;
+                            registerBtn.innerHTML = 'Create Account';
+                            return;
+                        }
+                    }
                     
                     // Show success message
                     successMessage.textContent = 'Account created successfully! Redirecting...';
