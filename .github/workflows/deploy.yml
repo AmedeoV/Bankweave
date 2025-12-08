@@ -28,155 +28,44 @@ jobs:
       - name: Build new image
         run: |
           echo "🔨 Building new Docker image..."
-          docker-compose -p bankweave-prod build --no-cache web
+          docker-compose -p bankweave-prod build web
       
-      - name: Start new container on temporary port
+      - name: Deploy to production
         run: |
-          echo "🚀 Starting new container on port 8084..."
-          # Create temporary docker-compose override
-          cat > docker-compose.temp.yml << 'TEMPEOF'
-          services:
-            web:
-              container_name: bankweave-web-temp
-              ports:
-                - "8084:8080"
-              depends_on: []
-              networks:
-                - bankweave-prod_bankweave-network-prod
-          
-          networks:
-            bankweave-prod_bankweave-network-prod:
-              external: true
-          TEMPEOF
-          
-          # Start only the web service, connecting to existing prod network
-          docker-compose -p bankweave-temp -f docker-compose.yml -f docker-compose.temp.yml up -d --no-deps web
+          echo "🚀 Deploying to production..."
+          docker-compose -p bankweave-prod up -d web
       
-      - name: Wait and health check new container
+      - name: Wait for application to be ready
         run: |
-          echo "🏥 Checking new container health..."
-          for i in {1..60}; do
-            if curl -f http://localhost:8084 > /dev/null 2>&1; then
-              echo "✅ New container is healthy!"
-              break
-            fi
-            if [ $i -eq 60 ]; then
-              echo "❌ New container health check failed"
-              docker logs bankweave-web-temp
-              docker-compose -p bankweave-temp -f docker-compose.yml -f docker-compose.temp.yml down
-              exit 1
-            fi
-            echo "⏳ Waiting for new container... ($i/60)"
-            sleep 2
-          done
-      
-      - name: Test new container endpoints
-        run: |
-          echo "🧪 Testing new container endpoints..."
-          # Test that the app is responding properly
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8084)
-          if [ "$HTTP_STATUS" -eq 200 ] || [ "$HTTP_STATUS" -eq 302 ]; then
-            echo "✅ New container responding correctly (HTTP $HTTP_STATUS)"
-          else
-            echo "❌ New container returned unexpected status: HTTP $HTTP_STATUS"
-            docker logs bankweave-web-temp
-            docker-compose -p bankweave-temp -f docker-compose.yml -f docker-compose.temp.yml down
-            exit 1
-          fi
-      
-      - name: Update Nginx to new container
-        run: |
-          echo "🔄 Switching Nginx to new container..."
-          sudo cp /etc/nginx/sites-available/bankweave.conf /etc/nginx/sites-available/bankweave.conf.backup
-          
-          # Update nginx config to point to port 8084
-          sudo sed -i 's/proxy_pass http:\/\/localhost:8083;/proxy_pass http:\/\/localhost:8084;/' /etc/nginx/sites-available/bankweave.conf
-          
-          # Test nginx config
-          sudo nginx -t
-          
-          # Reload nginx (zero downtime)
-          sudo systemctl reload nginx
-          
-          echo "✅ Nginx now pointing to new container"
-      
-      - name: Verify production traffic on new container
-        run: |
-          echo "🌐 Verifying production traffic..."
-          sleep 3
-          
-          # Test through nginx (HTTP on port 80)
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:80 || echo "000")
-          if [ "$HTTP_STATUS" -eq 200 ] || [ "$HTTP_STATUS" -eq 302 ]; then
-            echo "✅ Production traffic working (HTTP $HTTP_STATUS)"
-          else
-            echo "⚠️  Warning: Unexpected status through nginx: HTTP $HTTP_STATUS"
-            echo "Rolling back..."
-            sudo cp /etc/nginx/sites-available/bankweave.conf.backup /etc/nginx/sites-available/bankweave.conf
-            sudo systemctl reload nginx
-            docker-compose -p bankweave-temp -f docker-compose.yml -f docker-compose.temp.yml down
-            exit 1
-          fi
-      
-      - name: Stop old container
-        run: |
-          echo "🛑 Stopping old container..."
-          docker stop bankweave-web-prod || true
-          docker rm bankweave-web-prod || true
-      
-      - name: Rename new container to production
-        run: |
-          echo "🔀 Promoting new container to production..."
-          docker stop bankweave-web-temp
-          docker rename bankweave-web-temp bankweave-web-prod
-          
-          # Clean up temp compose project
-          docker-compose -p bankweave-temp -f docker-compose.yml -f docker-compose.temp.yml down || true
-          
-          # Restart with production name and port
-          docker-compose -p bankweave-prod down || true
-          docker-compose -p bankweave-prod up -d
-      
-      - name: Final health check
-        run: |
-          echo "🏥 Final health check..."
-          sleep 5
+          echo "🏥 Checking application health..."
           for i in {1..30}; do
             if curl -f http://localhost:8083 > /dev/null 2>&1; then
-              echo "✅ Production container healthy!"
+              echo "✅ Application is healthy!"
               break
             fi
             if [ $i -eq 30 ]; then
-              echo "❌ Production container health check failed"
+              echo "❌ Application health check failed"
               docker-compose -p bankweave-prod logs web
               exit 1
             fi
-            echo "⏳ Waiting... ($i/30)"
+            echo "⏳ Waiting for application... ($i/30)"
             sleep 2
           done
       
-      - name: Restore Nginx to production port
+      - name: Cleanup old images
         run: |
-          echo "🔄 Restoring Nginx to production port 8083..."
-          sudo sed -i 's/proxy_pass http:\/\/localhost:8084;/proxy_pass http:\/\/localhost:8083;/' /etc/nginx/sites-available/bankweave.conf
-          sudo nginx -t
-          sudo systemctl reload nginx
-      
-      - name: Cleanup
-        run: |
-          echo "🧹 Cleaning up..."
-          rm -f docker-compose.temp.yml
-          docker system prune -f
+          echo "🧹 Cleaning up old images..."
+          docker image prune -f
       
       - name: Deployment summary
         run: |
           echo "=========================================="
-          echo "✅ Zero-downtime deployment successful!"
+          echo "✅ Deployment successful!"
           echo "=========================================="
           echo "URL: https://bankweave.step0fail.com"
           echo ""
           echo "Containers running:"
-          docker-compose -p bankweave-prod ps --format "table {{.Name}}\t{{.Status}}"
+          docker-compose -p bankweave-prod ps
           echo ""
-          echo "Deployment completed with ZERO downtime! 🚀"
+          echo "Deployment completed! 🚀"
           echo "=========================================="
