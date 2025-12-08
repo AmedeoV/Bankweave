@@ -36,7 +36,8 @@ public class AccountsController : ControllerBase
     public async Task<IActionResult> GetAccounts()
     {
         var accounts = await _dbContext.FinancialAccounts
-            .OrderByDescending(a => a.LastSyncedAt)
+            .OrderBy(a => a.Provider)
+            .ThenBy(a => a.DisplayName)
             .Select(a => new
             {
                 id = a.Id,
