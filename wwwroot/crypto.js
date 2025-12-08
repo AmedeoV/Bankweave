@@ -5,6 +5,7 @@ class CryptoManager {
     constructor() {
         this.encryptionKey = null;
         this.salt = null; // Will be user-specific, stored on server
+        this.isInitialized = false;
     }
 
     // Derive encryption key from password using PBKDF2
@@ -44,6 +45,8 @@ class CryptoManager {
         const saltBuffer = Uint8Array.from(atob(userSalt), c => c.charCodeAt(0));
         this.salt = saltBuffer;
         this.encryptionKey = await this.deriveKey(password, saltBuffer);
+        this.isInitialized = true;
+        console.log('CryptoManager initialized successfully');
     }
 
     // Generate random salt for new users
