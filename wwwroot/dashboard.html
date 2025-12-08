@@ -5079,6 +5079,175 @@
             }
         }
 
+        // Encryption Migration Functions
+        async function checkEncryptionMigrationStatus() {
+            if (!window.cryptoManager.isInitialized) {
+                console.log('Encryption not initialized, skipping migration check');
+                return;
+            }
+
+            try {
+                const response = await Auth.fetchWithAuth('/api/encryptionmigration/status');
+                if (!response.ok) {
+                    console.error('Failed to check migration status');
+                    return;
+                }
+
+                const status = await response.json();
+                
+                if (status.needsMigration && status.unencryptedTransactions > 0) {
+                    showMigrationPrompt(status);
+                }
+            } catch (error) {
+                console.error('Error checking migration status:', error);
+            }
+        }
+
+        function showMigrationPrompt(status) {
+            const modal = document.createElement('div');
+            modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 10000;';
+            modal.innerHTML = `
+                <div style="background: white; padding: 30px; border-radius: 12px; max-width: 500px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
+                    <h2 style="margin: 0 0 15px 0; color: #1f2937; font-size: 24px;">🔒 Encrypt Your Data</h2>
+                    <p style="margin: 0 0 20px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
+                        You have <strong>${status.unencryptedTransactions} unencrypted transactions</strong> in your account.
+                        <br><br>
+                        For maximum privacy, we recommend encrypting your existing transaction data. This will ensure that 
+                        your financial information is secure and private.
+                    </p>
+                    <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px; margin-bottom: 20px; border-radius: 4px;">
+                        <p style="margin: 0; color: #92400e; font-size: 14px;">
+                            ⚠️ This process may take a few moments for large transaction histories. 
+                            Your data will remain accessible during migration.
+                        </p>
+                    </div>
+                    <div style="display: flex; gap: 10px; flex-direction: column;">
+                        <button id="migrateNowBtn" onclick="startMigration()" 
+                                style="padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600;">
+                            🔒 Encrypt My Data Now
+                        </button>
+                        <button onclick="this.closest('[style*=fixed]').remove();" 
+                                style="padding: 14px; background: #e5e7eb; color: #4b5563; border: none; border-radius: 8px; cursor: pointer; font-size: 14px;">
+                            Remind Me Later
+                        </button>
+                    </div>
+                    <div id="migrationProgress" style="display: none; margin-top: 20px;">
+                        <div style="background: #e5e7eb; height: 8px; border-radius: 4px; overflow: hidden;">
+                            <div id="migrationProgressBar" style="background: linear-gradient(90deg, #667eea, #764ba2); height: 100%; width: 0%; transition: width 0.3s;"></div>
+                        </div>
+                        <p id="migrationStatus" style="margin: 10px 0 0 0; color: #6b7280; font-size: 14px; text-align: center;"></p>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            window.migrationModal = modal;
+        }
+
+        async function startMigration() {
+            const migrateBtn = document.getElementById('migrateNowBtn');
+            const progressDiv = document.getElementById('migrationProgress');
+            const progressBar = document.getElementById('migrationProgressBar');
+            const statusText = document.getElementById('migrationStatus');
+
+            if (!window.cryptoManager.isInitialized) {
+                alert('❌ Encryption not initialized. Please log out and log in again.');
+                return;
+            }
+
+            migrateBtn.disabled = true;
+            migrateBtn.textContent = '🔄 Encrypting...';
+            progressDiv.style.display = 'block';
+            statusText.textContent = 'Loading transactions...';
+
+            try {
+                // Fetch all unencrypted transactions using legacy API
+                const transactions = await fetchLegacyTransactions();
+                
+                if (transactions.length === 0) {
+                    statusText.textContent = 'No transactions to encrypt';
+                    setTimeout(() => {
+                        window.migrationModal.remove();
+                        location.reload();
+                    }, 2000);
+                    return;
+                }
+
+                statusText.textContent = `Encrypting ${transactions.length} transactions...`;
+                
+                const encryptedTransactions = [];
+                for (let i = 0; i < transactions.length; i++) {
+                    const txn = transactions[i];
+                    
+                    try {
+                        const encrypted = {
+                            id: txn.id,
+                            descriptionEncrypted: null,
+                            counterpartyNameEncrypted: null,
+                            amountEncrypted: null,
+                            categoryEncrypted: null
+                        };
+
+                        // Encrypt each field
+                        if (txn.description) {
+                            encrypted.descriptionEncrypted = await window.cryptoManager.encrypt(txn.description);
+                        }
+                        if (txn.counterpartyName) {
+                            encrypted.counterpartyNameEncrypted = await window.cryptoManager.encrypt(txn.counterpartyName);
+                        }
+                        if (txn.amount !== undefined && txn.amount !== null) {
+                            encrypted.amountEncrypted = await window.cryptoManager.encrypt(txn.amount.toString());
+                        }
+                        if (txn.category) {
+                            encrypted.categoryEncrypted = await window.cryptoManager.encrypt(txn.category);
+                        }
+
+                        encryptedTransactions.push(encrypted);
+
+                        // Update progress
+                        const progress = Math.round(((i + 1) / transactions.length) * 100);
+                        progressBar.style.width = progress + '%';
+                        statusText.textContent = `Encrypting: ${i + 1} / ${transactions.length} (${progress}%)`;
+                    } catch (error) {
+                        console.error('Failed to encrypt transaction:', txn.id, error);
+                    }
+                }
+
+                // Send encrypted transactions to server
+                statusText.textContent = 'Saving encrypted data...';
+                const response = await Auth.fetchWithAuth('/api/encryptionmigration/migrate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ encryptedTransactions })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to save encrypted transactions');
+                }
+
+                const result = await response.json();
+                
+                progressBar.style.width = '100%';
+                statusText.textContent = `✅ Success! Encrypted ${result.migratedCount} transactions`;
+                
+                if (result.failedCount > 0) {
+                    statusText.textContent += ` (${result.failedCount} failed)`;
+                    console.error('Migration errors:', result.errors);
+                }
+
+                // Close modal and reload
+                setTimeout(() => {
+                    window.migrationModal.remove();
+                    location.reload();
+                }, 2000);
+
+            } catch (error) {
+                console.error('Migration failed:', error);
+                statusText.textContent = '❌ Migration failed. Please try again.';
+                migrateBtn.disabled = false;
+                migrateBtn.textContent = '🔄 Retry';
+            }
+        }
+
         // Initialize user info display
         async function initUserInfo() {
             const userNameEl = document.getElementById('userName');
@@ -5101,6 +5270,9 @@
             } catch (error) {
                 console.error('Failed to check admin status:', error);
             }
+
+            // Check if encryption migration is needed
+            await checkEncryptionMigrationStatus();
         }
 
         // Initialize on page load
