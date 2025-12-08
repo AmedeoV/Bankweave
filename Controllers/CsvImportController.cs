@@ -2,13 +2,16 @@ using Bankweave.Entities;
 using Bankweave.Infrastructure;
 using Bankweave.Services;
 using Bankweave.Services.CsvParsers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace Bankweave.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class CsvImportController : ControllerBase
 {
     private readonly AppDbContext _dbContext;

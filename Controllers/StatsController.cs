@@ -1,14 +1,17 @@
 using Bankweave.Infrastructure;
 using Bankweave.Entities;
 using Bankweave.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
+using System.Security.Claims;
 
 namespace Bankweave.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class StatsController : ControllerBase
 {
     private readonly AppDbContext _dbContext;

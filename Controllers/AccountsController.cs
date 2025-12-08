@@ -1,12 +1,15 @@
 using Bankweave.Infrastructure;
 using Bankweave.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace Bankweave.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class AccountsController : ControllerBase
 {
     private readonly AppDbContext _dbContext;
@@ -35,7 +38,14 @@ public class AccountsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAccounts()
     {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized();
+        }
+
         var accounts = await _dbContext.FinancialAccounts
+            .Where(a => a.UserId == userId)
             .OrderBy(a => a.Provider)
             .ThenBy(a => a.DisplayName)
             .Select(a => new
@@ -60,7 +70,16 @@ public class AccountsController : ControllerBase
         [FromQuery] DateTime? from,
         [FromQuery] DateTime? to)
     {
-        var query = _dbContext.MoneyMovements.AsQueryable();
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized();
+        }
+
+        var query = _dbContext.MoneyMovements
+            .Include(m => m.Account)
+            .Where(m => m.Account!.UserId == userId)
+            .AsQueryable();
 
         if (from.HasValue)
         {
@@ -96,8 +115,14 @@ public class AccountsController : ControllerBase
     [HttpGet("{accountId}")]
     public async Task<IActionResult> GetAccount(Guid accountId)
     {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized();
+        }
+
         var account = await _dbContext.FinancialAccounts
-            .Where(a => a.Id == accountId)
+            .Where(a => a.Id == accountId && a.UserId == userId)
             .Select(a => new
             {
                 id = a.Id,
@@ -127,8 +152,14 @@ public class AccountsController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 50)
     {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized();
+        }
+
         var account = await _dbContext.FinancialAccounts
-            .Where(a => a.Id == accountId)
+            .Where(a => a.Id == accountId && a.UserId == userId)
             .Select(a => a.DisplayName)
             .FirstOrDefaultAsync();
 
@@ -185,8 +216,14 @@ public class AccountsController : ControllerBase
     [HttpDelete("{accountId}")]
     public async Task<IActionResult> DeleteAccount(Guid accountId)
     {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized();
+        }
+
         var account = await _dbContext.FinancialAccounts
-            .FirstOrDefaultAsync(a => a.Id == accountId);
+            .FirstOrDefaultAsync(a => a.Id == accountId && a.UserId == userId);
 
         if (account == null)
         {
@@ -207,8 +244,14 @@ public class AccountsController : ControllerBase
             return BadRequest(new { error = "New name is required" });
         }
 
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized();
+        }
+
         var account = await _dbContext.FinancialAccounts
-            .FirstOrDefaultAsync(a => a.Id == accountId);
+            .FirstOrDefaultAsync(a => a.Id == accountId && a.UserId == userId);
 
         if (account == null)
         {
@@ -227,8 +270,15 @@ public class AccountsController : ControllerBase
     [HttpPut("transactions/{transactionId}/toggle-essential")]
     public async Task<IActionResult> ToggleEssentialExpense(Guid transactionId, [FromBody] ToggleEssentialExpenseRequest request)
     {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized();
+        }
+
         var transaction = await _dbContext.MoneyMovements
-            .FirstOrDefaultAsync(m => m.Id == transactionId);
+            .Include(m => m.Account)
+            .FirstOrDefaultAsync(m => m.Id == transactionId && m.Account!.UserId == userId);
 
         if (transaction == null)
         {
@@ -255,9 +305,17 @@ public class AccountsController : ControllerBase
             return BadRequest(new { error = "Description is required" });
         }
 
-        // Find all transactions with matching description (case-insensitive)
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized();
+        }
+
+        // Find all transactions with matching description (case-insensitive) for current user
         var transactions = await _dbContext.MoneyMovements
-            .Where(m => m.Description != null && m.Description.ToLower() == request.Description.ToLower())
+            .Include(m => m.Account)
+            .Where(m => m.Description != null && m.Description.ToLower() == request.Description.ToLower()
+                && m.Account!.UserId == userId)
             .ToListAsync();
 
         if (transactions.Count == 0)

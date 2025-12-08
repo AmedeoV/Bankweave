@@ -1,10 +1,13 @@
 using Bankweave.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Bankweave.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class CategorizationRulesController : ControllerBase
 {
     private readonly RuleBasedCategorizationService _ruleService;
