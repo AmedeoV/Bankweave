@@ -19,7 +19,8 @@ A privacy-focused personal financial dashboard with **zero-knowledge encryption*
 - **💡 Insights**: Recurring transactions, essential expenses, and spending patterns
 
 ### 🚀 Technology
-- **📱 Modern Web UI**: Clean, mobile-friendly interface
+- **📱 Mobile-Friendly UI**: Fully responsive design optimized for phones, tablets, and desktop
+- **🎨 Modern Interface**: Clean, glassmorphic design with smooth animations
 - **🐳 Docker Ready**: One-command deployment
 - **💾 PostgreSQL**: Reliable data storage
 - **⚡ Fast & Responsive**: Built with .NET 8 and vanilla JavaScript
