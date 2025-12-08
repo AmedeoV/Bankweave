@@ -3631,13 +3631,14 @@
 
         // Load all data
         async function loadData() {
-            // Initialize encryption if not already initialized
+            // Try to restore encryption from session
             if (!window.cryptoManager.isInitialized) {
-                const encryptionSalt = localStorage.getItem('encryptionSalt');
-                if (encryptionSalt) {
-                    // TODO: For now, encryption will be initialized during login/register
-                    // In future, we might prompt for password here if session expired
-                    console.log('Encryption not initialized, but salt exists. Will be initialized on next login.');
+                const restored = await window.cryptoManager.restoreKeyFromSession();
+                if (!restored) {
+                    const encryptionSalt = localStorage.getItem('encryptionSalt');
+                    if (encryptionSalt) {
+                        console.log('Encryption not initialized and could not be restored. Will use legacy API until next login.');
+                    }
                 }
             }
             

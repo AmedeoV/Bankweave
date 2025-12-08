@@ -46,7 +46,64 @@ class CryptoManager {
         this.salt = saltBuffer;
         this.encryptionKey = await this.deriveKey(password, saltBuffer);
         this.isInitialized = true;
+        
+        // Store key in session storage for persistence across page navigation
+        await this.saveKeyToSession();
+        
         console.log('CryptoManager initialized successfully');
+    }
+
+    // Save encryption key to sessionStorage (cleared when browser closes)
+    async saveKeyToSession() {
+        if (!this.encryptionKey) return;
+        
+        try {
+            // Export key to raw format
+            const exported = await crypto.subtle.exportKey('raw', this.encryptionKey);
+            const keyArray = Array.from(new Uint8Array(exported));
+            const keyBase64 = btoa(String.fromCharCode(...keyArray));
+            
+            // Store in sessionStorage (memory only, cleared on tab close)
+            sessionStorage.setItem('_ek', keyBase64);
+            if (this.salt) {
+                const saltBase64 = btoa(String.fromCharCode(...this.salt));
+                sessionStorage.setItem('_es', saltBase64);
+            }
+        } catch (error) {
+            console.error('Failed to save key to session:', error);
+        }
+    }
+
+    // Restore encryption key from sessionStorage
+    async restoreKeyFromSession() {
+        try {
+            const keyBase64 = sessionStorage.getItem('_ek');
+            const saltBase64 = sessionStorage.getItem('_es');
+            
+            if (!keyBase64 || !saltBase64) {
+                return false;
+            }
+
+            // Restore salt
+            this.salt = Uint8Array.from(atob(saltBase64), c => c.charCodeAt(0));
+            
+            // Restore key
+            const keyArray = Uint8Array.from(atob(keyBase64), c => c.charCodeAt(0));
+            this.encryptionKey = await crypto.subtle.importKey(
+                'raw',
+                keyArray,
+                { name: 'AES-GCM', length: 256 },
+                false,
+                ['encrypt', 'decrypt']
+            );
+            
+            this.isInitialized = true;
+            console.log('CryptoManager restored from session');
+            return true;
+        } catch (error) {
+            console.error('Failed to restore key from session:', error);
+            return false;
+        }
     }
 
     // Generate random salt for new users
@@ -172,6 +229,9 @@ class CryptoManager {
     clear() {
         this.encryptionKey = null;
         this.salt = null;
+        this.isInitialized = false;
+        sessionStorage.removeItem('_ek');
+        sessionStorage.removeItem('_es');
     }
 }
 

@@ -34,6 +34,13 @@ class Auth {
         localStorage.removeItem('userEmail');
         localStorage.removeItem('userFirstName');
         localStorage.removeItem('userLastName');
+        localStorage.removeItem('encryptionSalt');
+        
+        // Clear encryption keys from memory
+        if (window.cryptoManager) {
+            window.cryptoManager.clear();
+        }
+        
         window.location.href = '/login.html';
     }
 
