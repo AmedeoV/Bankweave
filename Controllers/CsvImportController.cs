@@ -62,9 +62,11 @@ public class CsvImportController : ControllerBase
                 _logger.LogInformation("Detected balance from CSV: {Balance:C}", parseResult.DetectedBalance.Value);
             }
 
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            
             // Get or create account
             var account = _dbContext.FinancialAccounts
-                .FirstOrDefault(a => a.Provider == request.Provider && a.DisplayName == request.AccountName);
+                .FirstOrDefault(a => a.UserId == userId && a.Provider == request.Provider && a.DisplayName == request.AccountName);
 
             bool isNewAccount = false;
             if (account == null)
@@ -73,6 +75,7 @@ public class CsvImportController : ControllerBase
                 account = new FinancialAccount
                 {
                     Id = Guid.NewGuid(),
+                    UserId = userId,
                     Provider = request.Provider,
                     DisplayName = request.AccountName,
                     ExternalId = $"csv-{request.Provider}-{Guid.NewGuid()}",
@@ -175,7 +178,9 @@ public class CsvImportController : ControllerBase
     [HttpPost("set-balance/{accountId}")]
     public async Task<IActionResult> SetAccountBalance(Guid accountId, [FromBody] SetBalanceRequest request)
     {
-        var account = await _dbContext.FinancialAccounts.FindAsync(accountId);
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var account = await _dbContext.FinancialAccounts
+            .FirstOrDefaultAsync(a => a.Id == accountId && a.UserId == userId);
         
         if (account == null)
         {
@@ -213,9 +218,11 @@ public class CsvImportController : ControllerBase
             return BadRequest(new { error = "Provider is required" });
         }
 
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        
         // Check if account already exists
         var existingAccount = _dbContext.FinancialAccounts
-            .FirstOrDefault(a => a.Provider == request.Provider && a.DisplayName == request.AccountName);
+            .FirstOrDefault(a => a.UserId == userId && a.Provider == request.Provider && a.DisplayName == request.AccountName);
 
         if (existingAccount != null)
         {
@@ -226,6 +233,7 @@ public class CsvImportController : ControllerBase
         var account = new FinancialAccount
         {
             Id = Guid.NewGuid(),
+            UserId = userId,
             Provider = request.Provider,
             DisplayName = request.AccountName,
             CurrentBalance = request.CurrentBalance,
@@ -279,7 +287,9 @@ public class CsvImportController : ControllerBase
             return BadRequest(new { error = "Account ID is required" });
         }
 
-        var account = await _dbContext.FinancialAccounts.FindAsync(request.AccountId.Value);
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var account = await _dbContext.FinancialAccounts
+            .FirstOrDefaultAsync(a => a.Id == request.AccountId.Value && a.UserId == userId);
         if (account == null)
         {
             return NotFound(new { error = "Account not found" });
@@ -368,8 +378,11 @@ public class CsvImportController : ControllerBase
     {
         try
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            
             // Find duplicates: same account, date, amount, and description
             var allTransactions = await _dbContext.MoneyMovements
+                .Where(m => m.Account.UserId == userId)
                 .OrderBy(m => m.CreatedAt)
                 .ToListAsync();
 
