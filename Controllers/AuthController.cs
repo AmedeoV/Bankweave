@@ -47,7 +47,8 @@ public class AuthController : ControllerBase
             Email = model.Email,
             FirstName = model.FirstName,
             LastName = model.LastName,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            EncryptionSalt = GenerateEncryptionSalt()
         };
 
         var result = await _userManager.CreateAsync(user, model.Password);
@@ -66,6 +67,7 @@ public class AuthController : ControllerBase
             Email = user.Email!,
             FirstName = user.FirstName,
             LastName = user.LastName,
+            EncryptionSalt = user.EncryptionSalt,
             Expiration = DateTime.UtcNow.AddDays(7)
         });
     }
@@ -95,6 +97,7 @@ public class AuthController : ControllerBase
             Email = user.Email!,
             FirstName = user.FirstName,
             LastName = user.LastName,
+            EncryptionSalt = user.EncryptionSalt,
             Expiration = DateTime.UtcNow.AddDays(7)
         });
     }
@@ -196,5 +199,16 @@ public class AuthController : ControllerBase
         );
 
         return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    // Generate a random salt for encryption key derivation
+    private string GenerateEncryptionSalt()
+    {
+        var salt = new byte[16];
+        using (var rng = System.Security.Cryptography.RandomNumberGenerator.Create())
+        {
+            rng.GetBytes(salt);
+        }
+        return Convert.ToBase64String(salt);
     }
 }
