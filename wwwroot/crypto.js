@@ -49,8 +49,6 @@ class CryptoManager {
         
         // Store key in session storage for persistence across page navigation
         await this.saveKeyToSession();
-        
-        console.log('CryptoManager initialized successfully');
     }
 
     // Save encryption key to sessionStorage (cleared when browser closes)
@@ -98,7 +96,6 @@ class CryptoManager {
             );
             
             this.isInitialized = true;
-            console.log('CryptoManager restored from session');
             return true;
         } catch (error) {
             console.error('Failed to restore key from session:', error);

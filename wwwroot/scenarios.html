@@ -985,20 +985,6 @@
             const essential = expenses.filter(t => t.isEssentialExpense === true);
             const nonessential = expenses.filter(t => t.isEssentialExpense === false);
 
-            console.log('Total transactions:', allTransactions.length);
-            console.log('Income:', income.length);
-            console.log('Expenses:', expenses.length);
-            console.log('Essential:', essential.length);
-            console.log('Non-essential:', nonessential.length);
-            console.log('Lost transactions:', expenses.length - essential.length - nonessential.length);
-            
-            // Debug Patreon transactions
-            const patreon = allTransactions.filter(t => t.description && t.description.includes('Patreon'));
-            console.log('Patreon transactions:', patreon.length);
-            patreon.forEach(p => {
-                console.log('Patreon:', p.description, 'isEssential:', p.isEssentialExpense, 'type:', typeof p.isEssentialExpense);
-            });
-
             renderCategoryGroup('income-categories', groupByCategory(income), true, 'income');
             renderCategoryGroup('essential-categories', groupByCategory(essential), false, 'essential');
             renderCategoryGroup('nonessential-categories', groupByCategory(nonessential), false, 'nonessential');
