@@ -1801,7 +1801,7 @@
         // Load overview stats
         async function loadOverview() {
             try {
-                const response = await fetch('/api/stats/overview');
+                const response = await Auth.fetchWithAuth('/api/stats/overview');
                 const data = await response.json();
                 
                 document.getElementById('totalBalance').textContent = formatCurrency(data.totalBalance);
@@ -1877,7 +1877,7 @@
 
         async function loadAccounts() {
             try {
-                const response = await fetch('/api/accounts');
+                const response = await Auth.fetchWithAuth('/api/accounts');
                 const accounts = await response.json();
                 
                 const container = document.getElementById('accountsList');
@@ -1972,7 +1972,7 @@
 
         async function loadRecentTransactions(filter = currentTransactionFilter) {
             try {
-                const accountsResponse = await fetch('/api/accounts');
+                const accountsResponse = await Auth.fetchWithAuth('/api/accounts');
                 const accounts = await accountsResponse.json();
                 
                 if (accounts.length === 0) {
@@ -1987,7 +1987,7 @@
                 // Get transactions from all accounts
                 allLoadedTransactions = [];
                 for (const account of accounts) {
-                    const response = await fetch(`/api/accounts/${account.id}/transactions?pageSize=10000`);
+                    const response = await Auth.fetchWithAuth(`/api/accounts/${account.id}/transactions?pageSize=10000`);
                     const data = await response.json();
                     allLoadedTransactions = allLoadedTransactions.concat(data.transactions);
                 }
@@ -2311,7 +2311,7 @@
             try {
                 if (mode === 'single') {
                     // Update single transaction
-                    const response = await fetch(`/api/accounts/transactions/${transactionId}/toggle-essential`, {
+                    const response = await Auth.fetchWithAuth(`/api/accounts/transactions/${transactionId}/toggle-essential`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ isEssential: !currentValue })
@@ -2330,7 +2330,7 @@
                     }
                 } else if (mode === 'similar') {
                     // Bulk update similar transactions
-                    const response = await fetch('/api/accounts/transactions/bulk-toggle-essential', {
+                    const response = await Auth.fetchWithAuth('/api/accounts/transactions/bulk-toggle-essential', {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ 
@@ -2407,7 +2407,7 @@
             document.getElementById('transactionsModalTitle').textContent = `Transactions - ${accountName}`;
             
             try {
-                const response = await fetch(`/api/accounts/${accountId}/transactions?pageSize=100`);
+                const response = await Auth.fetchWithAuth(`/api/accounts/${accountId}/transactions?pageSize=100`);
                 const data = await response.json();
                 displayTransactions(data.transactions, 'modalTransactionsList');
                 document.getElementById('transactionsModal').classList.add('active');
@@ -2445,7 +2445,7 @@
             accountSelect.innerHTML = '<option value="new">+ Create New Account</option>';
             
             try {
-                const response = await fetch('/api/accounts');
+                const response = await Auth.fetchWithAuth('/api/accounts');
                 const accounts = await response.json();
                 
                 // Filter accounts by selected provider
@@ -2517,7 +2517,7 @@
             if (!pendingBalanceAccountId) return;
             
             try {
-                await fetch(`/api/csvimport/set-balance/${pendingBalanceAccountId}`, {
+                await Auth.fetchWithAuth(`/api/csvimport/set-balance/${pendingBalanceAccountId}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ startingBalance: 0 })
@@ -2539,7 +2539,7 @@
             const balance = parseFloat(input.value) || 0;
             
             try {
-                const response = await fetch(`/api/csvimport/set-balance/${pendingBalanceAccountId}`, {
+                const response = await Auth.fetchWithAuth(`/api/csvimport/set-balance/${pendingBalanceAccountId}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ startingBalance: balance })
@@ -2588,7 +2588,7 @@
             }
             
             try {
-                const response = await fetch(`/api/accounts/${pendingRenameAccountId}/rename`, {
+                const response = await Auth.fetchWithAuth(`/api/accounts/${pendingRenameAccountId}/rename`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ newName })
@@ -2622,7 +2622,7 @@
             }
             
             try {
-                const response = await fetch('/api/csvimport/remove-duplicates', {
+                const response = await Auth.fetchWithAuth('/api/csvimport/remove-duplicates', {
                     method: 'POST'
                 });
                 
@@ -2663,7 +2663,7 @@
 
             try {
                 // Create the account
-                const response = await fetch('/api/csvimport/manual-account', {
+                const response = await Auth.fetchWithAuth('/api/csvimport/manual-account', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ provider, accountName, currentBalance: balance, isCreditCard })
@@ -2712,7 +2712,7 @@
             }
 
             try {
-                const response = await fetch(`/api/csvimport/set-balance/${pendingUpdateBalanceAccountId}`, {
+                const response = await Auth.fetchWithAuth(`/api/csvimport/set-balance/${pendingUpdateBalanceAccountId}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ startingBalance: newBalance })
@@ -2772,7 +2772,7 @@
             }
 
             try {
-                const response = await fetch('/api/accounts/manual-transaction', {
+                const response = await Auth.fetchWithAuth('/api/accounts/manual-transaction', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -2828,7 +2828,7 @@
             formData.append('accountName', accountName);
             
             try {
-                const response = await fetch('/api/csvimport/upload', {
+                const response = await Auth.fetchWithAuth('/api/csvimport/upload', {
                     method: 'POST',
                     body: formData
                 });
@@ -2861,7 +2861,7 @@
             }
             
             try {
-                const response = await fetch(`/api/accounts/${accountId}`, {
+                const response = await Auth.fetchWithAuth(`/api/accounts/${accountId}`, {
                     method: 'DELETE'
                 });
                 
@@ -2880,7 +2880,7 @@
         // Toggle exclude from total
         async function toggleExcludeFromTotal(accountId, excludeFromTotal) {
             try {
-                const response = await fetch(`/api/accounts/${accountId}/exclude-from-total`, {
+                const response = await Auth.fetchWithAuth(`/api/accounts/${accountId}/exclude-from-total`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ excludeFromTotal })
@@ -2934,7 +2934,7 @@
                 formData.append('provider', pendingSyncCsvProvider);
                 formData.append('accountId', pendingSyncCsvAccountId);
 
-                const response = await fetch('/api/csvimport/sync', {
+                const response = await Auth.fetchWithAuth('/api/csvimport/sync', {
                     method: 'POST',
                     body: formData
                 });
@@ -2946,7 +2946,7 @@
                     await loadData();
                     
                     // Automatically record balance snapshot after sync
-                    await fetch('/api/stats/snapshot', { method: 'POST' });
+                    await Auth.fetchWithAuth('/api/stats/snapshot', { method: 'POST' });
                     await loadBalanceHistory();
                     
                     const duplicateMsg = data.skippedDuplicates > 0 ? ` (${data.skippedDuplicates} duplicates skipped)` : '';
@@ -2994,7 +2994,7 @@
 
             try {
                 // Save API key
-                const setKeyResponse = await fetch(`/api/accounts/${pendingApiKeyAccountId}/set-api-key`, {
+                const setKeyResponse = await Auth.fetchWithAuth(`/api/accounts/${pendingApiKeyAccountId}/set-api-key`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ apiKey: combinedKey })
@@ -3024,7 +3024,7 @@
 
         async function syncTrading212Internal(accountId) {
             try {
-                const response = await fetch(`/api/accounts/${accountId}/sync-trading212`, {
+                const response = await Auth.fetchWithAuth(`/api/accounts/${accountId}/sync-trading212`, {
                     method: 'POST'
                 });
 
@@ -3034,7 +3034,7 @@
                     await loadData();
                     
                     // Automatically record balance snapshot after sync
-                    await fetch('/api/stats/snapshot', { method: 'POST' });
+                    await Auth.fetchWithAuth('/api/stats/snapshot', { method: 'POST' });
                     await loadBalanceHistory();
                     
                     const balanceMsg = `Balance: ${formatCurrency(data.balance)}\nLast synced: ${new Date(data.lastSynced).toLocaleString()}`;
@@ -3061,7 +3061,7 @@
 
         async function syncTrading212Transactions(accountId) {
             try {
-                const response = await fetch(`/api/accounts/${accountId}/sync-trading212-transactions`, {
+                const response = await Auth.fetchWithAuth(`/api/accounts/${accountId}/sync-trading212-transactions`, {
                     method: 'POST'
                 });
 
@@ -3123,7 +3123,7 @@
                 formData.append('provider', 'trading212');
                 formData.append('accountId', pendingTrading212MappingAccountId);
 
-                const importResponse = await fetch('/api/csvimport/sync', {
+                const importResponse = await Auth.fetchWithAuth('/api/csvimport/sync', {
                     method: 'POST',
                     body: formData
                 });
@@ -3136,7 +3136,7 @@
                 }
 
                 // Then sync with API to link transactions
-                const syncResponse = await fetch(`/api/accounts/${pendingTrading212MappingAccountId}/sync-trading212-transactions`, {
+                const syncResponse = await Auth.fetchWithAuth(`/api/accounts/${pendingTrading212MappingAccountId}/sync-trading212-transactions`, {
                     method: 'POST'
                 });
 
@@ -3146,7 +3146,7 @@
                 await loadData();
 
                 // Automatically record balance snapshot
-                await fetch('/api/stats/snapshot', { method: 'POST' });
+                await Auth.fetchWithAuth('/api/stats/snapshot', { method: 'POST' });
                 await loadBalanceHistory();
 
                 if (syncResponse.ok) {
@@ -3197,7 +3197,7 @@
         // Update category
         async function updateSingleTransactionCategory(transactionId, category) {
             try {
-                const response = await fetch(`/api/accounts/transactions/${transactionId}/category/single`, {
+                const response = await Auth.fetchWithAuth(`/api/accounts/transactions/${transactionId}/category/single`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ category })
@@ -3226,7 +3226,7 @@
 
         async function updateTransactionCategory(transactionId, category) {
             try {
-                const response = await fetch(`/api/accounts/transactions/${transactionId}/category`, {
+                const response = await Auth.fetchWithAuth(`/api/accounts/transactions/${transactionId}/category`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ category })
@@ -3269,7 +3269,7 @@
         async function viewCategoryTransactions(category) {
             try {
                 // Fetch all accounts to get all transactions
-                const accountsResponse = await fetch('/api/accounts');
+                const accountsResponse = await Auth.fetchWithAuth('/api/accounts');
                 if (!accountsResponse.ok) {
                     throw new Error(`Failed to fetch accounts: ${accountsResponse.status}`);
                 }
@@ -3278,7 +3278,7 @@
                 // Collect all transactions from all accounts
                 let allTransactions = [];
                 for (const account of accounts) {
-                    const txResponse = await fetch(`/api/accounts/${account.id}/transactions?pageSize=10000`);
+                    const txResponse = await Auth.fetchWithAuth(`/api/accounts/${account.id}/transactions?pageSize=10000`);
                     if (!txResponse.ok) {
                         console.error(`Failed to fetch transactions for account ${account.id}: ${txResponse.status}`);
                         continue; // Skip this account but continue with others
@@ -3505,7 +3505,7 @@
 
         async function loadRecurringTransactions(months = currentRecurringMonths) {
             try {
-                const response = await fetch(`/api/stats/recurring-transactions?months=${months}`);
+                const response = await Auth.fetchWithAuth(`/api/stats/recurring-transactions?months=${months}`);
                 const data = await response.json();
                 renderRecurringTransactions(data);
             } catch (error) {
@@ -3657,7 +3657,7 @@
 
         async function loadCategoryBreakdown(days = currentCategoryDays) {
             try {
-                const response = await fetch(`/api/stats/categories?days=${days}`);
+                const response = await Auth.fetchWithAuth(`/api/stats/categories?days=${days}`);
                 const categories = await response.json();
                 
                 if (categories.length === 0) {
@@ -3679,7 +3679,7 @@
 
         async function loadIncomeCategoryBreakdown(days = currentIncomeCategoryDays) {
             try {
-                const response = await fetch(`/api/stats/income-categories?days=${days}`);
+                const response = await Auth.fetchWithAuth(`/api/stats/income-categories?days=${days}`);
                 const categories = await response.json();
                 
                 if (categories.length === 0) {
@@ -3938,7 +3938,7 @@
             try {
                 // Update overview stats with custom date range
                 console.log('Fetching overview stats...');
-                const overviewResponse = await fetch(`/api/stats/overview?startDate=${startDate}&endDate=${endDate}`);
+                const overviewResponse = await Auth.fetchWithAuth(`/api/stats/overview?startDate=${startDate}&endDate=${endDate}`);
                 if (!overviewResponse.ok) {
                     const errorText = await overviewResponse.text();
                     console.error('Overview stats error:', overviewResponse.status, errorText);
@@ -3960,7 +3960,7 @@
                 
                 // Update spending category breakdown
                 console.log('Fetching spending categories...');
-                const spendingResponse = await fetch(`/api/stats/categories?startDate=${startDate}&endDate=${endDate}`);
+                const spendingResponse = await Auth.fetchWithAuth(`/api/stats/categories?startDate=${startDate}&endDate=${endDate}`);
                 if (!spendingResponse.ok) {
                     const errorText = await spendingResponse.text();
                     console.error('Spending categories error:', spendingResponse.status, errorText);
@@ -3982,7 +3982,7 @@
                 
                 // Update income category breakdown
                 console.log('Fetching income categories...');
-                const incomeResponse = await fetch(`/api/stats/income-categories?startDate=${startDate}&endDate=${endDate}`);
+                const incomeResponse = await Auth.fetchWithAuth(`/api/stats/income-categories?startDate=${startDate}&endDate=${endDate}`);
                 if (!incomeResponse.ok) {
                     const errorText = await incomeResponse.text();
                     console.error('Income categories error:', incomeResponse.status, errorText);
@@ -4004,7 +4004,7 @@
                 
                 // Update essential expenses
                 console.log('Fetching essential expenses...');
-                const essentialResponse = await fetch(`/api/stats/essential-expenses?startDate=${startDate}&endDate=${endDate}`);
+                const essentialResponse = await Auth.fetchWithAuth(`/api/stats/essential-expenses?startDate=${startDate}&endDate=${endDate}`);
                 if (!essentialResponse.ok) {
                     const errorText = await essentialResponse.text();
                     console.error('Essential expenses error:', essentialResponse.status, errorText);
@@ -4050,7 +4050,7 @@
                 
                 // Update recurring transactions
                 console.log('Fetching recurring transactions...');
-                const recurringResponse = await fetch(`/api/stats/recurring-transactions?startDate=${startDate}&endDate=${endDate}`);
+                const recurringResponse = await Auth.fetchWithAuth(`/api/stats/recurring-transactions?startDate=${startDate}&endDate=${endDate}`);
                 if (!recurringResponse.ok) {
                     const errorText = await recurringResponse.text();
                     console.error('Recurring transactions error:', recurringResponse.status, errorText);
@@ -4072,7 +4072,7 @@
                 
                 // Update balance history
                 console.log('Fetching balance history...');
-                const balanceResponse = await fetch(`/api/stats/balance-history?startDate=${startDate}&endDate=${endDate}`);
+                const balanceResponse = await Auth.fetchWithAuth(`/api/stats/balance-history?startDate=${startDate}&endDate=${endDate}`);
                 if (!balanceResponse.ok) {
                     const errorText = await balanceResponse.text();
                     console.error('Balance history error:', balanceResponse.status, errorText);
@@ -4150,7 +4150,7 @@
             
             // Load data with custom range
             try {
-                const response = await fetch(`/api/stats/categories?startDate=${startDate}&endDate=${endDate}`);
+                const response = await Auth.fetchWithAuth(`/api/stats/categories?startDate=${startDate}&endDate=${endDate}`);
                 const categories = await response.json();
                 
                 if (categories.length === 0) {
@@ -4187,7 +4187,7 @@
             
             // Load data with custom range
             try {
-                const response = await fetch(`/api/stats/income-categories?startDate=${startDate}&endDate=${endDate}`);
+                const response = await Auth.fetchWithAuth(`/api/stats/income-categories?startDate=${startDate}&endDate=${endDate}`);
                 const categories = await response.json();
                 
                 if (categories.length === 0) {
@@ -4229,7 +4229,7 @@
             
             // Load data with custom range
             try {
-                const response = await fetch(`/api/stats/recurring-transactions?startDate=${startDate}&endDate=${endDate}`);
+                const response = await Auth.fetchWithAuth(`/api/stats/recurring-transactions?startDate=${startDate}&endDate=${endDate}`);
                 const data = await response.json();
                 renderRecurringTransactions(data);
             } catch (error) {
@@ -4254,7 +4254,7 @@
             
             // Load data with custom range
             try {
-                const response = await fetch(`/api/stats/balance-history?startDate=${startDate}&endDate=${endDate}`);
+                const response = await Auth.fetchWithAuth(`/api/stats/balance-history?startDate=${startDate}&endDate=${endDate}`);
                 const snapshots = await response.json();
                 
                 if (snapshots.length === 0) {
@@ -4280,7 +4280,7 @@
 
         async function loadEssentialExpenses(days = currentEssentialExpensesDays) {
             try {
-                const response = await fetch(`/api/stats/essential-expenses?days=${days}`);
+                const response = await Auth.fetchWithAuth(`/api/stats/essential-expenses?days=${days}`);
                 const data = await response.json();
                 
                 const container = document.getElementById('essentialExpensesSection');
@@ -4357,7 +4357,7 @@
             document.querySelector('[data-essential-days="custom"]').classList.add('active');
             
             try {
-                const response = await fetch(`/api/stats/essential-expenses?startDate=${startDate}&endDate=${endDate}`);
+                const response = await Auth.fetchWithAuth(`/api/stats/essential-expenses?startDate=${startDate}&endDate=${endDate}`);
                 const data = await response.json();
                 
                 const container = document.getElementById('essentialExpensesSection');
@@ -4407,14 +4407,14 @@
         async function viewEssentialExpenseTransactions() {
             try {
                 // Get all accounts first
-                const accountsResponse = await fetch('/api/accounts');
+                const accountsResponse = await Auth.fetchWithAuth('/api/accounts');
                 const accounts = await accountsResponse.json();
                 
                 // Fetch transactions from all accounts
                 const allTransactions = [];
                 for (const account of accounts) {
                     try {
-                        const txResponse = await fetch(`/api/accounts/${account.id}/transactions?pageSize=1000`);
+                        const txResponse = await Auth.fetchWithAuth(`/api/accounts/${account.id}/transactions?pageSize=1000`);
                         const txData = await txResponse.json();
                         if (txData.transactions && txData.transactions.length > 0) {
                             allTransactions.push(...txData.transactions);
@@ -4481,14 +4481,14 @@
         async function viewEssentialExpensesByCategory(category) {
             try {
                 // Get all accounts first
-                const accountsResponse = await fetch('/api/accounts');
+                const accountsResponse = await Auth.fetchWithAuth('/api/accounts');
                 const accounts = await accountsResponse.json();
                 
                 // Fetch transactions from all accounts
                 const allTransactions = [];
                 for (const account of accounts) {
                     try {
-                        const txResponse = await fetch(`/api/accounts/${account.id}/transactions?pageSize=1000`);
+                        const txResponse = await Auth.fetchWithAuth(`/api/accounts/${account.id}/transactions?pageSize=1000`);
                         const txData = await txResponse.json();
                         if (txData.transactions && txData.transactions.length > 0) {
                             allTransactions.push(...txData.transactions);
@@ -4558,7 +4558,7 @@
         
         async function loadBalanceHistory(months = currentBalanceHistoryMonths) {
             try {
-                const response = await fetch(`/api/stats/balance-history?months=${months}`);
+                const response = await Auth.fetchWithAuth(`/api/stats/balance-history?months=${months}`);
                 const snapshots = await response.json();
                 
                 if (snapshots.length === 0) {
@@ -4660,7 +4660,7 @@
 
         async function createBalanceSnapshot() {
             try {
-                const response = await fetch('/api/stats/snapshot', { method: 'POST' });
+                const response = await Auth.fetchWithAuth('/api/stats/snapshot', { method: 'POST' });
                 const result = await response.json();
                 
                 alert(`Balance snapshot recorded: ${formatCurrency(result.totalBalance)}`);
@@ -4689,7 +4689,7 @@
         const requisitionId = urlParams.get('ref');
         if (requisitionId) {
             // Sync the requisition
-            fetch(`/api/banks/sync/${requisitionId}`, { method: 'POST' })
+            Auth.fetchWithAuth(`/api/banks/sync/${requisitionId}`, { method: 'POST' })
                 .then(() => {
                     alert('Account synced successfully!');
                     window.history.replaceState({}, document.title, '/');
@@ -4709,7 +4709,7 @@
             }
 
             try {
-                const response = await fetch('/api/accounts/recategorize-all', { method: 'POST' });
+                const response = await Auth.fetchWithAuth('/api/accounts/recategorize-all', { method: 'POST' });
                 const data = await response.json();
                 
                 alert(`${data.message}\n\nTotal transactions: ${data.total}\nUpdated: ${data.updated}`);
@@ -4727,7 +4727,7 @@
         
         async function loadRules() {
             try {
-                const response = await fetch('/api/categorizationrules');
+                const response = await Auth.fetchWithAuth('/api/categorizationrules');
                 const rules = await response.json();
                 
                 const container = document.getElementById('rulesList');
@@ -4806,7 +4806,7 @@
 
         async function editRule(ruleId) {
             try {
-                const response = await fetch('/api/categorizationrules');
+                const response = await Auth.fetchWithAuth('/api/categorizationrules');
                 const rules = await response.json();
                 const rule = rules.find(r => r.id === ruleId);
                 
@@ -4859,14 +4859,14 @@
                 let response;
                 if (ruleId) {
                     // Update existing rule
-                    response = await fetch(`/api/categorizationrules/${ruleId}`, {
+                    response = await Auth.fetchWithAuth(`/api/categorizationrules/${ruleId}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ pattern, category, isRegex, caseSensitive, priority, markAsEssential, transactionType })
                     });
                 } else {
                     // Create new rule
-                    response = await fetch('/api/categorizationrules', {
+                    response = await Auth.fetchWithAuth('/api/categorizationrules', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ pattern, category, isRegex, caseSensitive, priority, markAsEssential, transactionType })
@@ -4893,7 +4893,7 @@
             }
             
             try {
-                const response = await fetch(`/api/categorizationrules/${ruleId}`, {
+                const response = await Auth.fetchWithAuth(`/api/categorizationrules/${ruleId}`, {
                     method: 'DELETE'
                 });
                 
@@ -4915,7 +4915,7 @@
             }
             
             try {
-                const response = await fetch('/api/categorizationrules/apply', {
+                const response = await Auth.fetchWithAuth('/api/categorizationrules/apply', {
                     method: 'POST'
                 });
                 
