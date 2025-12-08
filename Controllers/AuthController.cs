@@ -87,6 +87,14 @@ public class AuthController : ControllerBase
         if (!result.Succeeded)
             return Unauthorized(new { message = "Invalid email or password" });
 
+        // Generate encryption salt for existing users who don't have one
+        if (string.IsNullOrEmpty(user.EncryptionSalt))
+        {
+            user.EncryptionSalt = GenerateEncryptionSalt();
+            await _userManager.UpdateAsync(user);
+            _logger.LogInformation($"Generated encryption salt for existing user {model.Email}");
+        }
+
         var token = await GenerateJwtToken(user);
 
         _logger.LogInformation($"User {model.Email} logged in successfully");
