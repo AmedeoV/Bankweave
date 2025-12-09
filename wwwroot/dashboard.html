@@ -3842,11 +3842,15 @@
             }
             
             const newCategory = selectElement.value;
+            console.log('Selected category:', newCategory);
             
             if (mode === 'single') {
+                console.log('Calling updateSingleTransactionCategory');
                 await updateSingleTransactionCategory(transactionId, newCategory);
             } else {
+                console.log('Calling updateTransactionCategory');
                 await updateTransactionCategory(transactionId, newCategory);
+                console.log('updateTransactionCategory returned');
             }
             
             // Refresh the modal - check which modal is open
