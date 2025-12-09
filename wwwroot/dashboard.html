@@ -5287,18 +5287,30 @@
         function showMigrationPrompt(status) {
             const modal = document.createElement('div');
             modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 10000;';
+            
+            const totalItems = status.unencryptedTransactions + status.unencryptedAccounts + 
+                             status.unencryptedRules + status.unencryptedScenarios + 
+                             (status.userNamesNeedMigration ? 1 : 0);
+            
+            let details = [];
+            if (status.unencryptedTransactions > 0) details.push(`${status.unencryptedTransactions} transactions`);
+            if (status.unencryptedAccounts > 0) details.push(`${status.unencryptedAccounts} accounts`);
+            if (status.unencryptedRules > 0) details.push(`${status.unencryptedRules} rules`);
+            if (status.unencryptedScenarios > 0) details.push(`${status.unencryptedScenarios} scenarios`);
+            if (status.userNamesNeedMigration) details.push('your name');
+            
             modal.innerHTML = `
                 <div style="background: white; padding: 30px; border-radius: 12px; max-width: 500px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
                     <h2 style="margin: 0 0 15px 0; color: #1f2937; font-size: 24px;">🔒 Encrypt Your Data</h2>
                     <p style="margin: 0 0 20px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
-                        You have <strong>${status.unencryptedTransactions} unencrypted transactions</strong> in your account.
+                        You have <strong>${totalItems} unencrypted items</strong>: ${details.join(', ')}.
                         <br><br>
-                        For maximum privacy, we recommend encrypting your existing transaction data. This will ensure that 
+                        For maximum privacy, we recommend encrypting all your data. This will ensure that 
                         your financial information is secure and private.
                     </p>
                     <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px; margin-bottom: 20px; border-radius: 4px;">
                         <p style="margin: 0; color: #92400e; font-size: 14px;">
-                            ⚠️ This process may take a few moments for large transaction histories. 
+                            ⚠️ This process may take a few moments. 
                             Your data will remain accessible during migration.
                         </p>
                     </div>
