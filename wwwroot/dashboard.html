@@ -3561,18 +3561,24 @@
 
         async function updateTransactionCategory(transactionId, category) {
             try {
+                console.log('updateTransactionCategory called:', { transactionId, category });
+                
                 const requestBody = { category };
                 
                 // Encrypt category if crypto is initialized
                 if (cryptoManager && cryptoManager.isInitialized) {
                     requestBody.categoryEncrypted = await cryptoManager.encrypt(category);
+                    console.log('Category encrypted');
                 }
                 
+                console.log('Sending PUT request to update category...');
                 const response = await Auth.fetchWithAuth(`/api/accounts/transactions/${transactionId}/category`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(requestBody)
                 });
+
+                console.log('Response status:', response.status, response.ok);
 
                 if (response.ok) {
                     const result = await response.json();
@@ -3608,7 +3614,7 @@
                 }
             } catch (error) {
                 console.error('Error updating category:', error);
-                alert('Failed to update category');
+                alert(`Failed to update category: ${error.message}`);
             }
         }
 
@@ -3856,12 +3862,23 @@
 
         // Save category change from modal
         async function saveCategoryChangeModal(transactionId, oldCategory, mode = 'single') {
+            console.log('saveCategoryChangeModal called:', { transactionId, oldCategory, mode });
+            
             const selectElement = document.getElementById(`select-modal-${transactionId}`);
+            if (!selectElement) {
+                console.error('Select element not found:', `select-modal-${transactionId}`);
+                alert('Error: Could not find category selection dropdown');
+                return;
+            }
+            
             const newCategory = selectElement.value;
+            console.log('Selected category:', newCategory);
             
             if (mode === 'single') {
+                console.log('Calling updateSingleTransactionCategory');
                 await updateSingleTransactionCategory(transactionId, newCategory);
             } else {
+                console.log('Calling updateTransactionCategory for all similar');
                 await updateTransactionCategory(transactionId, newCategory);
             }
             
