@@ -2334,49 +2334,52 @@
                 return;
             }
             
+            // Create select element using DOM methods
+            const selectEl = document.createElement('select');
+            selectEl.id = `select-${transactionId}`;
+            selectEl.className = 'category-select';
+            selectEl.style.cssText = 'padding: 4px 8px; border: 1px solid #e5e7eb; border-radius: 4px; font-size: 12px; cursor: pointer; color: #1f2937; background: white; min-width: 120px;';
+            
+            // Add options
+            categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                if (cat === currentCategory) {
+                    option.selected = true;
+                }
+                selectEl.appendChild(option);
+            });
+            
+            // Create save button
+            const saveBtn = document.createElement('button');
+            saveBtn.textContent = '✓';
+            saveBtn.style.cssText = 'margin-left: 4px; padding: 4px 8px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;';
+            saveBtn.onclick = () => showCategorySaveOptions(transactionId, currentCategory);
+            
+            // Create cancel button
+            const cancelBtn = document.createElement('button');
+            cancelBtn.textContent = '✕';
+            cancelBtn.style.cssText = 'margin-left: 4px; padding: 4px 8px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;';
+            cancelBtn.onclick = () => cancelCategoryChange(transactionId, currentCategory);
+            
+            // Clear dropdown and add elements
+            dropdownElement.innerHTML = '';
+            dropdownElement.appendChild(selectEl);
+            dropdownElement.appendChild(saveBtn);
+            dropdownElement.appendChild(cancelBtn);
+            
             // Hide badge, show dropdown
             badgeElement.style.display = 'none';
             dropdownElement.style.display = 'inline-block';
             dropdownElement.style.minWidth = '200px';
-            dropdownElement.style.verticalAlign = 'middle';
-            console.log('Badge hidden, dropdown shown');
-            console.log('Dropdown element before innerHTML:', dropdownElement);
             
-            const categoryOptions = categories.map(cat => 
-                `<option value="${cat}" ${currentCategory === cat ? 'selected' : ''}>${cat}</option>`
-            ).join('');
-            
-            const dropdownHTML = `
-                <select id="select-${transactionId}" class="category-select" style="padding: 4px 8px; border: 1px solid #e5e7eb; border-radius: 4px; font-size: 12px; cursor: pointer; color: #1f2937; background: white; min-width: 120px; display: inline-block;">
-                    ${categoryOptions}
-                </select>
-                <button onclick="showCategorySaveOptions('${transactionId}', '${currentCategory}')" style="display: inline-block; margin-left: 4px; padding: 4px 8px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;">✓</button>
-                <button onclick="cancelCategoryChange('${transactionId}', '${currentCategory}')" style="display: inline-block; margin-left: 4px; padding: 4px 8px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;">✕</button>
-            `;
-            
-            console.log('Setting dropdown HTML, length:', dropdownHTML.length);
-            dropdownElement.innerHTML = dropdownHTML;
-            console.log('Dropdown element after innerHTML:', dropdownElement);
-            console.log('Dropdown children:', dropdownElement.children.length);
-            
-            // Debug: Check if children are visible
-            if (dropdownElement.children.length > 0) {
-                const selectElement = dropdownElement.children[0];
-                console.log('First child (select):', selectElement);
-                console.log('Select innerHTML length:', selectElement.innerHTML.length);
-                console.log('Select options count:', selectElement.options ? selectElement.options.length : 'N/A');
-                console.log('Select computed style:', window.getComputedStyle(selectElement).display);
-                console.log('Select visibility:', window.getComputedStyle(selectElement).visibility);
-                console.log('Select position:', window.getComputedStyle(selectElement).position);
-                
-                // Force reflow
-                void dropdownElement.offsetWidth;
-                
-                console.log('After reflow - Select offsetWidth:', selectElement.offsetWidth);
-                console.log('After reflow - Select offsetHeight:', selectElement.offsetHeight);
-                console.log('After reflow - Dropdown offsetWidth:', dropdownElement.offsetWidth);
-                console.log('After reflow - Dropdown offsetHeight:', dropdownElement.offsetHeight);
-            }
+            console.log('Dropdown created with DOM methods');
+            console.log('Select element:', selectEl);
+            console.log('Select offsetWidth:', selectEl.offsetWidth);
+            console.log('Select offsetHeight:', selectEl.offsetHeight);
+            console.log('Dropdown offsetWidth:', dropdownElement.offsetWidth);
+            console.log('Dropdown offsetHeight:', dropdownElement.offsetHeight);
         }
 
         // Show options for saving category change
