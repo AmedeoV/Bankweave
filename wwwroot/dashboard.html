@@ -2325,16 +2325,21 @@
             ];
 
             const badgeElement = document.getElementById(`category-badge-${transactionId}`);
-            const dropdownElement = document.getElementById(`category-dropdown-${transactionId}`);
             
-            console.log('Found elements:', { badgeElement, dropdownElement });
-            
-            if (!badgeElement || !dropdownElement) {
-                console.error('Could not find elements for transaction', transactionId);
+            if (!badgeElement) {
+                console.error('Could not find badge element for transaction', transactionId);
                 return;
             }
             
-            // Create select element using DOM methods
+            // Get the parent element (the <p> tag)
+            const parentElement = badgeElement.parentElement;
+            
+            // Create container span for dropdown
+            const dropdownContainer = document.createElement('span');
+            dropdownContainer.id = `category-dropdown-${transactionId}`;
+            dropdownContainer.style.cssText = 'display: inline-block; margin-left: 5px; vertical-align: middle;';
+            
+            // Create select element
             const selectEl = document.createElement('select');
             selectEl.id = `select-${transactionId}`;
             selectEl.className = 'category-select';
@@ -2363,23 +2368,21 @@
             cancelBtn.style.cssText = 'margin-left: 4px; padding: 4px 8px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;';
             cancelBtn.onclick = () => cancelCategoryChange(transactionId, currentCategory);
             
-            // Clear dropdown and add elements
-            dropdownElement.innerHTML = '';
-            dropdownElement.appendChild(selectEl);
-            dropdownElement.appendChild(saveBtn);
-            dropdownElement.appendChild(cancelBtn);
+            // Add elements to container
+            dropdownContainer.appendChild(selectEl);
+            dropdownContainer.appendChild(saveBtn);
+            dropdownContainer.appendChild(cancelBtn);
             
-            // Hide badge, show dropdown
+            // Insert dropdown after badge, then hide badge
+            parentElement.insertBefore(dropdownContainer, badgeElement.nextSibling);
             badgeElement.style.display = 'none';
-            dropdownElement.style.display = 'inline-block';
-            dropdownElement.style.minWidth = '200px';
             
-            console.log('Dropdown created with DOM methods');
+            console.log('Dropdown created and inserted into DOM');
             console.log('Select element:', selectEl);
             console.log('Select offsetWidth:', selectEl.offsetWidth);
             console.log('Select offsetHeight:', selectEl.offsetHeight);
-            console.log('Dropdown offsetWidth:', dropdownElement.offsetWidth);
-            console.log('Dropdown offsetHeight:', dropdownElement.offsetHeight);
+            console.log('Dropdown container offsetWidth:', dropdownContainer.offsetWidth);
+            console.log('Dropdown container offsetHeight:', dropdownContainer.offsetHeight);
         }
 
         // Show options for saving category change
@@ -2440,10 +2443,15 @@
             const badgeElement = document.getElementById(`category-badge-${transactionId}`);
             const dropdownElement = document.getElementById(`category-dropdown-${transactionId}`);
             
-            // Show badge, hide dropdown
-            badgeElement.style.display = 'inline';
-            dropdownElement.style.display = 'none';
-            dropdownElement.innerHTML = '';
+            // Show badge again
+            if (badgeElement) {
+                badgeElement.style.display = 'inline';
+            }
+            
+            // Remove the dynamically created dropdown
+            if (dropdownElement) {
+                dropdownElement.remove();
+            }
         }
 
         // Toggle essential expense
