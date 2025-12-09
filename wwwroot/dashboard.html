@@ -3699,6 +3699,7 @@
 
         // Show category dropdown in modal
         function showCategoryDropdownModal(transactionId, currentCategory) {
+            console.log('showCategoryDropdownModal called with:', transactionId, currentCategory);
             
             const categories = [
                 'Balance Payment',
@@ -3741,21 +3742,29 @@
             
             let modalContainer, badgeElement;
             
+            console.log('Checking modals - categoryModal:', categoryModal?.style.display, 'accountModal:', accountModal?.classList.contains('active'));
+            
             if (categoryModal && categoryModal.style.display === 'block') {
                 // We're in the category transactions modal (Overview page)
                 modalContainer = document.getElementById('categoryTransactionsList');
                 badgeElement = modalContainer.querySelector(`#category-badge-modal-${transactionId}`);
+                console.log('Using category transactions modal, badge found:', !!badgeElement);
             } else if (accountModal && accountModal.classList.contains('active')) {
                 // We're in the account transactions modal
                 modalContainer = document.getElementById('modalTransactionsList');
                 badgeElement = modalContainer.querySelector(`#category-badge-${transactionId}`);
+                console.log('Using account transactions modal, badge found:', !!badgeElement);
             } else {
+                console.log('No modal is active, returning');
                 return; // No modal is active
             }
             
             if (!badgeElement) {
+                console.error('Badge element not found for transaction:', transactionId);
                 return;
             }
+            
+            console.log('Badge element found, creating dropdown');
             
             // Get the parent element
             const parentElement = badgeElement.parentElement;
