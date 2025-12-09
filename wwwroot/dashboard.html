@@ -2873,16 +2873,34 @@
             }
 
             try {
+                // Prepare transaction data
+                const transactionData = {
+                    accountId: pendingAddTransactionAccountId,
+                    date,
+                    description,
+                    amount,
+                    category
+                };
+
+                // Encrypt if crypto is initialized
+                if (window.cryptoManager && window.cryptoManager.isInitialized()) {
+                    const encrypted = await window.cryptoManager.encryptTransaction({
+                        description,
+                        amount,
+                        category,
+                        counterpartyName: '' // empty for manual transactions
+                    });
+                    
+                    transactionData.descriptionEncrypted = encrypted.descriptionEncrypted;
+                    transactionData.amountEncrypted = encrypted.amountEncrypted;
+                    transactionData.categoryEncrypted = encrypted.categoryEncrypted;
+                    transactionData.counterpartyNameEncrypted = encrypted.counterpartyNameEncrypted;
+                }
+
                 const response = await Auth.fetchWithAuth('/api/accounts/manual-transaction', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        accountId: pendingAddTransactionAccountId,
-                        date,
-                        description,
-                        amount,
-                        category
-                    })
+                    body: JSON.stringify(transactionData)
                 });
 
                 const data = await response.json();
@@ -2927,6 +2945,16 @@
             formData.append('file', fileInput.files[0]);
             formData.append('provider', provider);
             formData.append('accountName', accountName);
+            
+            // Encrypt account name if this is a new account
+            if (accountSelect.value === 'new' && window.cryptoManager && window.cryptoManager.isInitialized()) {
+                try {
+                    const encryptedDisplayName = await window.cryptoManager.encrypt(accountName);
+                    formData.append('displayNameEncrypted', encryptedDisplayName);
+                } catch (error) {
+                    console.error('Failed to encrypt account name:', error);
+                }
+            }
             
             try {
                 const response = await Auth.fetchWithAuth('/api/csvimport/upload', {

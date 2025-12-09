@@ -78,6 +78,7 @@ public class CsvImportController : ControllerBase
                     UserId = userId,
                     Provider = request.Provider,
                     DisplayName = request.AccountName,
+                    DisplayNameEncrypted = request.DisplayNameEncrypted,
                     ExternalId = $"csv-{request.Provider}-{Guid.NewGuid()}",
                     CreatedAt = DateTime.UtcNow,
                     CurrencyCode = "EUR",
@@ -467,6 +468,7 @@ public class CsvUploadRequest
     public IFormFile File { get; set; } = null!;
     public string Provider { get; set; } = string.Empty;
     public string AccountName { get; set; } = string.Empty;
+    public string? DisplayNameEncrypted { get; set; }
 }
 
 public class SetBalanceRequest

@@ -384,6 +384,10 @@ public class AccountsController : ControllerBase
             CurrencyCode = "EUR",
             Description = request.Description,
             Category = request.Category,
+            DescriptionEncrypted = request.DescriptionEncrypted,
+            AmountEncrypted = request.AmountEncrypted,
+            CategoryEncrypted = request.CategoryEncrypted,
+            CounterpartyNameEncrypted = request.CounterpartyNameEncrypted,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -840,6 +844,10 @@ public class ManualTransactionRequest
     public string Description { get; set; } = string.Empty;
     public decimal Amount { get; set; }
     public string Category { get; set; } = "Other";
+    public string? DescriptionEncrypted { get; set; }
+    public string? AmountEncrypted { get; set; }
+    public string? CategoryEncrypted { get; set; }
+    public string? CounterpartyNameEncrypted { get; set; }
 }
 
 public class SetApiKeyRequest
