@@ -581,7 +581,7 @@ public class AccountsController : ControllerBase
 
         foreach (var apiTxn in transactions)
         {
-            var movement = _trading212MappingService.MapToMoneyMovement(accountId, apiTxn);
+            var movement = _trading212MappingService.CreateFromApiTransaction(accountId, apiTxn);
             
             var exists = await _dbContext.MoneyMovements
                 .AnyAsync(m => m.FinancialAccountId == accountId && 
@@ -604,7 +604,7 @@ public class AccountsController : ControllerBase
                 else
                 {
                     movement.Id = Guid.NewGuid();
-                    movement.CreatedAt = DateTime.UtcNow();
+                    movement.CreatedAt = DateTime.UtcNow;
                     _dbContext.MoneyMovements.Add(movement);
                     importedCount++;
                 }
