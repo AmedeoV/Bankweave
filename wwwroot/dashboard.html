@@ -1939,6 +1939,22 @@
                 const response = await Auth.fetchWithAuth('/api/accounts');
                 const accounts = await response.json();
                 
+                // Decrypt API keys if encryption is initialized and store in sessionStorage
+                if (cryptoManager && cryptoManager.isInitialized) {
+                    for (const account of accounts) {
+                        if (account.apiKeyEncrypted) {
+                            try {
+                                const decryptedKey = await cryptoManager.decryptApiKey(account.apiKeyEncrypted);
+                                if (decryptedKey) {
+                                    sessionStorage.setItem(`_apik_${account.id}`, decryptedKey);
+                                }
+                            } catch (error) {
+                                console.error(`Failed to decrypt API key for account ${account.id}:`, error);
+                            }
+                        }
+                    }
+                }
+                
                 const container = document.getElementById('accountsList');
                 
                 if (accounts.length === 0) {
@@ -3118,6 +3134,9 @@
                     return;
                 }
 
+                // Store decrypted key in sessionStorage for future syncs
+                sessionStorage.setItem(`_apik_${pendingApiKeyAccountId}`, combinedKey);
+                
                 // Close modal
                 closeApiKeyModal();
 
@@ -3131,23 +3150,29 @@
         }
 
         async function syncTrading212(accountId) {
-            // For existing accounts, we need to prompt for API key since it's encrypted
-            if (cryptoManager && cryptoManager.isInitialized()) {
-                // Fetch account to check if it has encrypted API key
+            // Check if we have decrypted API key in sessionStorage
+            const decryptedApiKey = sessionStorage.getItem(`_apik_${accountId}`);
+            
+            if (decryptedApiKey) {
+                // Use the decrypted key from sessionStorage
+                await syncTrading212Internal(accountId, decryptedApiKey);
+            } else {
+                // Check if account has encrypted key but it's not in sessionStorage
                 const accountsResponse = await Auth.fetchWithAuth('/api/accounts');
                 if (accountsResponse.ok) {
                     const accounts = await accountsResponse.json();
                     const account = accounts.find(a => a.id === accountId);
                     
                     if (account && account.apiKeyEncrypted) {
-                        alert('Please re-enter your Trading 212 API key to sync (for security, we cannot decrypt it for API calls)');
+                        alert('API key not found in session. Please re-enter your Trading 212 API key.');
                         openApiKeyModal(accountId);
                         return;
                     }
                 }
+                
+                // No encrypted key, try legacy plaintext endpoint
+                await syncTrading212Internal(accountId, null);
             }
-            
-            await syncTrading212Internal(accountId, null);
         }
 
         async function syncTrading212Internal(accountId, apiKey) {

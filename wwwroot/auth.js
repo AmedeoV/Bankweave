@@ -36,9 +36,17 @@ class Auth {
         localStorage.removeItem('userLastName');
         localStorage.removeItem('encryptionSalt');
         
-        // Clear encryption keys from memory
+        // Clear encryption keys and API keys from memory
         if (window.cryptoManager) {
             window.cryptoManager.clear();
+        }
+        
+        // Clear all API keys from sessionStorage
+        for (let i = sessionStorage.length - 1; i >= 0; i--) {
+            const key = sessionStorage.key(i);
+            if (key && key.startsWith('_apik_')) {
+                sessionStorage.removeItem(key);
+            }
         }
         
         window.location.href = '/login.html';
