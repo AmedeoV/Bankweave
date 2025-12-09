@@ -3546,34 +3546,35 @@
         }
 
         async function updateTransactionCategory(transactionId, category) {
+            console.log('updateTransactionCategory START:', { transactionId, category });
             try {
                 const requestBody = { category };
                 
                 // Encrypt category if crypto is initialized
                 if (cryptoManager && cryptoManager.isInitialized) {
                     requestBody.categoryEncrypted = await cryptoManager.encrypt(category);
+                    console.log('Category encrypted');
                 }
                 
+                console.log('Calling API...', requestBody);
                 const response = await Auth.fetchWithAuth(`/api/accounts/transactions/${transactionId}/category`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(requestBody)
                 });
+                
+                console.log('API response:', response.status, response.ok);
 
                 if (response.ok) {
                     const result = await response.json();
+                    console.log('API success:', result);
                     
                     // Update the badge immediately for visual feedback
-                    const badge = document.querySelector(`[data-transaction-id="${transactionId}"] .category-badge`);
+                    const badge = document.querySelector(`[data-transaction-id="${transactionId}"]`);
+                    console.log('Badge element:', badge);
                     if (badge) {
                         badge.textContent = category;
-                        badge.className = 'category-badge'; // Reset classes
-                        
-                        // Add a success animation
-                        badge.style.animation = 'pulse 0.5s';
-                        setTimeout(() => {
-                            badge.style.animation = '';
-                        }, 500);
+                        badge.setAttribute('data-category', category);
                     }
                     
                     // Show success message with count
@@ -3581,7 +3582,9 @@
                         ? `✅ Category updated!\n\n${result.updatedCount} similar transactions were also updated to "${category}"`
                         : `✅ Category updated to "${category}"`;
                     
+                    console.log('Showing alert:', message);
                     alert(message);
+                    console.log('Alert shown');
                     
                     // Reload data to reflect all changes
                     await loadData();
@@ -3830,8 +3833,10 @@
 
         // Save category change from modal
         async function saveCategoryChangeModal(transactionId, oldCategory, mode = 'single') {
+            console.log('saveCategoryChangeModal START:', { transactionId, oldCategory, mode });
             const selectElement = document.getElementById(`select-modal-${transactionId}`);
             if (!selectElement) {
+                console.error('Select element not found');
                 alert('Error: Could not find category selection dropdown');
                 return;
             }
