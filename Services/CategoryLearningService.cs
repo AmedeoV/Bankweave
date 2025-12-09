@@ -45,22 +45,29 @@ public class CategoryLearningService
                     (m.Description != null && m.Description.Contains(identifier)))
                 .ToListAsync();
 
-            _logger.LogInformation("Found {Count} similar transactions for identifier '{Identifier}'", 
-                similarTransactions.Count, identifier);
+            _logger.LogInformation("Searching for transactions with identifier '{Identifier}'. Found {Count} similar transactions.", 
+                identifier, similarTransactions.Count);
 
             if (similarTransactions.Count == 0)
             {
-                _logger.LogInformation("No similar transactions found, returning 1 for the updated transaction");
+                _logger.LogInformation("No similar transactions found for identifier '{Identifier}'. Returning 1 for the updated transaction.", identifier);
                 return 1; // Return 1 since we updated the original transaction
             }
 
+            var updatedCount = 0;
             foreach (var tx in similarTransactions)
             {
+                _logger.LogDebug("Updating transaction {TxId} from category '{OldCat}' to '{NewCat}'", 
+                    tx.Id, tx.Category, newCategory);
                 tx.Category = newCategory;
+                updatedCount++;
                 // Note: CategoryEncrypted will be updated by the frontend after reload
             }
 
             await _dbContext.SaveChangesAsync();
+            
+            _logger.LogInformation("Successfully updated {Count} similar transactions to category '{Category}'", 
+                updatedCount, newCategory);
             
             return similarTransactions.Count;
         }
