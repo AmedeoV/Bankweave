@@ -2356,6 +2356,16 @@
             dropdownElement.innerHTML = dropdownHTML;
             console.log('Dropdown element after innerHTML:', dropdownElement);
             console.log('Dropdown children:', dropdownElement.children.length);
+            
+            // Debug: Check if children are visible
+            if (dropdownElement.children.length > 0) {
+                console.log('First child (select):', dropdownElement.children[0]);
+                console.log('Select computed style:', window.getComputedStyle(dropdownElement.children[0]).display);
+                console.log('Select visibility:', window.getComputedStyle(dropdownElement.children[0]).visibility);
+                console.log('Dropdown parent element:', dropdownElement.parentElement);
+                console.log('Dropdown offsetWidth:', dropdownElement.offsetWidth);
+                console.log('Dropdown offsetHeight:', dropdownElement.offsetHeight);
+            }
         }
 
         // Show options for saving category change
