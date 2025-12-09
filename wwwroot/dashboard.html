@@ -3788,12 +3788,23 @@
             // Store original badge display
             badgeElement.dataset.originalDisplay = badgeElement.style.display || 'inline';
             
+            console.log('Parent element:', parentElement);
+            console.log('Parent innerHTML length:', parentElement.innerHTML.length);
+            console.log('Parent children count:', parentElement.children.length);
+            console.log('Parent offsetWidth BEFORE insert:', parentElement.offsetWidth);
+            console.log('Parent offsetHeight BEFORE insert:', parentElement.offsetHeight);
+            
             // Insert dropdown BEFORE hiding badge
             parentElement.insertBefore(dropdownContainer, badgeElement);
+            
+            console.log('Parent offsetWidth AFTER insert:', parentElement.offsetWidth);
+            console.log('Parent offsetHeight AFTER insert:', parentElement.offsetHeight);
             
             // Now hide the badge
             badgeElement.style.display = 'none';
             
+            console.log('Parent offsetWidth AFTER hiding badge:', parentElement.offsetWidth);
+            console.log('Parent offsetHeight AFTER hiding badge:', parentElement.offsetHeight);
             console.log('Modal dropdown created and inserted');
             console.log('Select offsetWidth:', selectEl.offsetWidth);
             console.log('Select offsetHeight:', selectEl.offsetHeight);
