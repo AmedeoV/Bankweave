@@ -3724,33 +3724,72 @@
                 'Utilities'
             ];
 
-            const badgeElement = document.getElementById(`category-badge-modal-${transactionId}`);
-            const dropdownElement = document.getElementById(`category-dropdown-modal-${transactionId}`);
+            // Find the badge span wrapper
+            const badgeWrapper = document.getElementById(`category-badge-modal-${transactionId}`);
             
-            if (!badgeElement || !dropdownElement) {
-                console.error('Elements not found:', {
-                    badgeElement,
-                    dropdownElement,
-                    transactionId
-                });
+            if (!badgeWrapper) {
+                console.error('Badge wrapper not found for transaction:', transactionId);
                 return;
             }
             
-            // Hide badge, show dropdown
-            badgeElement.style.display = 'none';
-            dropdownElement.style.display = 'inline-block';
+            // Get the actual badge element inside the wrapper
+            const badgeElement = badgeWrapper.querySelector('.category-badge');
+            if (!badgeElement) {
+                console.error('Badge element not found inside wrapper');
+                return;
+            }
             
-            const categoryOptions = categories.map(cat => 
-                `<option value="${cat}" ${currentCategory === cat ? 'selected' : ''}>${cat}</option>`
-            ).join('');
+            // Create container span for dropdown
+            const dropdownContainer = document.createElement('span');
+            dropdownContainer.id = `category-dropdown-modal-${transactionId}`;
+            dropdownContainer.style.cssText = 'display: inline-block; margin-left: 5px; vertical-align: middle;';
             
-            dropdownElement.innerHTML = `
-                <select id="select-modal-${transactionId}" class="category-select" style="padding: 4px 8px; border: 1px solid #e5e7eb; border-radius: 4px; font-size: 12px; cursor: pointer; color: #1f2937; background: white;">
-                    ${categoryOptions}
-                </select>
-                <button onclick="showCategorySaveOptionsModal('${transactionId}', '${currentCategory}')" style="margin-left: 4px; padding: 4px 8px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;">✓</button>
-                <button onclick="cancelCategoryChangeModal('${transactionId}', '${currentCategory}')" style="margin-left: 4px; padding: 4px 8px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;">✕</button>
-            `;
+            // Create select element
+            const selectEl = document.createElement('select');
+            selectEl.id = `select-modal-${transactionId}`;
+            selectEl.className = 'category-select';
+            selectEl.style.cssText = 'padding: 4px 8px; border: 1px solid #e5e7eb; border-radius: 4px; font-size: 12px; cursor: pointer; color: #1f2937; background: white; min-width: 120px;';
+            
+            // Add options
+            categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                if (cat === currentCategory) {
+                    option.selected = true;
+                }
+                selectEl.appendChild(option);
+            });
+            
+            // Create save button
+            const saveBtn = document.createElement('button');
+            saveBtn.textContent = '✓';
+            saveBtn.style.cssText = 'margin-left: 4px; padding: 4px 8px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;';
+            saveBtn.onclick = () => showCategorySaveOptionsModal(transactionId, currentCategory);
+            
+            // Create cancel button
+            const cancelBtn = document.createElement('button');
+            cancelBtn.textContent = '✕';
+            cancelBtn.style.cssText = 'margin-left: 4px; padding: 4px 8px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;';
+            cancelBtn.onclick = () => cancelCategoryChangeModal(transactionId, currentCategory);
+            
+            // Add elements to container
+            dropdownContainer.appendChild(selectEl);
+            dropdownContainer.appendChild(saveBtn);
+            dropdownContainer.appendChild(cancelBtn);
+            
+            // Get parent element (should be the div containing the badge wrapper)
+            const parentElement = badgeWrapper.parentElement;
+            
+            // Insert dropdown after the badge wrapper
+            parentElement.insertBefore(dropdownContainer, badgeWrapper.nextSibling);
+            
+            // Hide the badge wrapper
+            badgeWrapper.style.display = 'none';
+            
+            console.log('Modal dropdown created and inserted');
+            console.log('Select offsetWidth:', selectEl.offsetWidth);
+            console.log('Select offsetHeight:', selectEl.offsetHeight);
         }
 
         // Show options for saving category change in modal
@@ -3808,12 +3847,18 @@
 
         // Cancel category change in modal
         function cancelCategoryChangeModal(transactionId, currentCategory) {
-            const badgeElement = document.getElementById(`category-badge-modal-${transactionId}`);
+            const badgeWrapper = document.getElementById(`category-badge-modal-${transactionId}`);
             const dropdownElement = document.getElementById(`category-dropdown-modal-${transactionId}`);
             
-            // Show badge, hide dropdown
-            badgeElement.style.display = 'inline';
-            dropdownElement.style.display = 'none';
+            // Show badge wrapper again
+            if (badgeWrapper) {
+                badgeWrapper.style.display = 'inline';
+            }
+            
+            // Remove the dynamically created dropdown
+            if (dropdownElement) {
+                dropdownElement.remove();
+            }
         }
 
         function closeCategoryTransactionsModal() {
