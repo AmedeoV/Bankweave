@@ -2361,20 +2361,21 @@
             
             // Debug: Check if children are visible
             if (dropdownElement.children.length > 0) {
-                console.log('First child (select):', dropdownElement.children[0]);
-                console.log('Select computed style:', window.getComputedStyle(dropdownElement.children[0]).display);
-                console.log('Select visibility:', window.getComputedStyle(dropdownElement.children[0]).visibility);
-                console.log('Select offsetWidth:', dropdownElement.children[0].offsetWidth);
-                console.log('Select offsetHeight:', dropdownElement.children[0].offsetHeight);
-                console.log('Dropdown parent element:', dropdownElement.parentElement);
-                const parentStyles = window.getComputedStyle(dropdownElement.parentElement);
-                console.log('Parent overflow:', parentStyles.overflow);
-                console.log('Parent display:', parentStyles.display);
-                console.log('Parent width:', parentStyles.width);
-                console.log('Dropdown offsetWidth:', dropdownElement.offsetWidth);
-                console.log('Dropdown offsetHeight:', dropdownElement.offsetHeight);
-                console.log('Dropdown computed width:', window.getComputedStyle(dropdownElement).width);
-                console.log('Dropdown computed minWidth:', window.getComputedStyle(dropdownElement).minWidth);
+                const selectElement = dropdownElement.children[0];
+                console.log('First child (select):', selectElement);
+                console.log('Select innerHTML length:', selectElement.innerHTML.length);
+                console.log('Select options count:', selectElement.options ? selectElement.options.length : 'N/A');
+                console.log('Select computed style:', window.getComputedStyle(selectElement).display);
+                console.log('Select visibility:', window.getComputedStyle(selectElement).visibility);
+                console.log('Select position:', window.getComputedStyle(selectElement).position);
+                
+                // Force reflow
+                void dropdownElement.offsetWidth;
+                
+                console.log('After reflow - Select offsetWidth:', selectElement.offsetWidth);
+                console.log('After reflow - Select offsetHeight:', selectElement.offsetHeight);
+                console.log('After reflow - Dropdown offsetWidth:', dropdownElement.offsetWidth);
+                console.log('After reflow - Dropdown offsetHeight:', dropdownElement.offsetHeight);
             }
         }
 
