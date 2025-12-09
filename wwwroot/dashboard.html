@@ -3879,10 +3879,23 @@
                 await updateTransactionCategory(transactionId, newCategory);
             }
             
-            // Close the modal and reopen it to refresh the list
-            const categoryName = document.getElementById('categoryTransactionsTitle').textContent.replace(' Transactions', '');
-            closeCategoryTransactionsModal();
-            await viewCategoryTransactions(categoryName);
+            // Refresh the modal - check which modal is open
+            const accountModal = document.getElementById('transactionsModal');
+            const categoryModal = document.getElementById('categoryTransactionsModal');
+            
+            if (accountModal && accountModal.classList.contains('active')) {
+                // Refresh account transactions modal
+                if (currentAccountId) {
+                    const response = await Auth.fetchWithAuth(`/api/accounts/${currentAccountId}/transactions?pageSize=100`);
+                    const data = await response.json();
+                    displayTransactions(data.transactions, 'modalTransactionsList', 'all', '', true);
+                }
+            } else if (categoryModal && window.getComputedStyle(categoryModal).display !== 'none') {
+                // Refresh category transactions modal
+                const categoryName = document.getElementById('categoryTransactionsTitle').textContent.replace(' Transactions', '');
+                closeCategoryTransactionsModal();
+                await viewCategoryTransactions(categoryName);
+            }
         }
 
         // Cancel category change in modal
