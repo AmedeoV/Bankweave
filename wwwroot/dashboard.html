@@ -3735,13 +3735,16 @@
                 'Utilities'
             ];
 
-            // When called from displayTransactions in modal, IDs don't have -modal suffix
-            const badgeElement = document.getElementById(`category-badge-${transactionId}`);
+            // Find elements WITHIN the modal, not document-wide
+            const modalContainer = document.getElementById('modalTransactionsList');
+            const badgeElement = modalContainer.querySelector(`#category-badge-${transactionId}`);
             
             if (!badgeElement) {
-                console.error('Badge element not found for transaction:', transactionId);
+                console.error('Badge element not found in modal for transaction:', transactionId);
                 return;
             }
+            
+            console.log('Found badge in modal:', badgeElement);
             
             // Get the parent element
             const parentElement = badgeElement.parentElement;
@@ -3884,7 +3887,9 @@
 
         // Cancel category change in modal
         function cancelCategoryChangeModal(transactionId, currentCategory) {
-            const badgeElement = document.getElementById(`category-badge-${transactionId}`);
+            // Find elements within modal
+            const modalContainer = document.getElementById('modalTransactionsList');
+            const badgeElement = modalContainer.querySelector(`#category-badge-${transactionId}`);
             const dropdownElement = document.getElementById(`category-dropdown-modal-${transactionId}`);
             
             // Show badge again
