@@ -2373,31 +2373,21 @@
             dropdownContainer.appendChild(saveBtn);
             dropdownContainer.appendChild(cancelBtn);
             
-            // Insert dropdown after badge, then hide badge
-            parentElement.insertBefore(dropdownContainer, badgeElement.nextSibling);
+            // Store original badge for potential restoration
+            badgeElement.dataset.originalDisplay = badgeElement.style.display || 'inline';
+            
+            // Insert dropdown BEFORE hiding badge (important for layout)
+            parentElement.insertBefore(dropdownContainer, badgeElement);
+            
+            // Now hide the badge AFTER dropdown is in place
             badgeElement.style.display = 'none';
             
             console.log('Dropdown created and inserted into DOM');
-            console.log('Parent element:', parentElement);
-            console.log('Parent offsetWidth:', parentElement.offsetWidth);
-            console.log('Parent offsetHeight:', parentElement.offsetHeight);
-            console.log('Parent computed width:', window.getComputedStyle(parentElement).width);
-            console.log('Parent computed display:', window.getComputedStyle(parentElement).display);
             console.log('Select element:', selectEl);
             console.log('Select offsetWidth:', selectEl.offsetWidth);
             console.log('Select offsetHeight:', selectEl.offsetHeight);
-            console.log('Select clientWidth:', selectEl.clientWidth);
-            console.log('Select clientHeight:', selectEl.clientHeight);
             console.log('Dropdown container offsetWidth:', dropdownContainer.offsetWidth);
             console.log('Dropdown container offsetHeight:', dropdownContainer.offsetHeight);
-            console.log('Dropdown container clientWidth:', dropdownContainer.clientWidth);
-            console.log('Dropdown container clientHeight:', dropdownContainer.clientHeight);
-            
-            // Try to force visibility
-            selectEl.style.width = '150px';
-            selectEl.style.height = '30px';
-            console.log('After setting explicit dimensions - Select offsetWidth:', selectEl.offsetWidth);
-            console.log('After setting explicit dimensions - Select offsetHeight:', selectEl.offsetHeight);
         }
 
         // Show options for saving category change
