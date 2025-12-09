@@ -3800,8 +3800,23 @@
                     console.log('After 2 animation frames:');
                     console.log('Select offsetWidth:', selectEl.offsetWidth);
                     console.log('Select offsetHeight:', selectEl.offsetHeight);
+                    console.log('Select getBoundingClientRect:', selectEl.getBoundingClientRect());
                     console.log('Parent offsetWidth:', parentElement.offsetWidth);
                     console.log('Parent offsetHeight:', parentElement.offsetHeight);
+                    
+                    // Check for transforms
+                    let el = selectEl;
+                    let depth = 0;
+                    console.log('=== Checking for transforms/scale ===');
+                    while (el && depth < 8) {
+                        const styles = window.getComputedStyle(el);
+                        const transform = styles.transform;
+                        if (transform !== 'none') {
+                            console.log(`${depth} ${el.tagName}${el.id ? '#' + el.id : ''}: transform=${transform}`);
+                        }
+                        el = el.parentElement;
+                        depth++;
+                    }
                     
                     // If still 0, try forcing layout by reading offsetWidth
                     if (selectEl.offsetWidth === 0) {
