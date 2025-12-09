@@ -14,6 +14,7 @@ public class FinancialAccount
     public bool ExcludeFromTotal { get; set; } = false;
     public bool IsCreditCard { get; set; } = false;
     public string? ApiKey { get; set; }
+    public string? ApiKeyEncrypted { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? LastSyncedAt { get; set; }
     public string? RequisitionId { get; set; }

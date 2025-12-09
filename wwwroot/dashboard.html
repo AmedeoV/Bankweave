@@ -3092,11 +3092,24 @@
             const combinedKey = `${apiKey}:${apiSecret}`;
 
             try {
+                // Encrypt API key if encryption is available
+                let requestBody;
+                if (cryptoManager && cryptoManager.isInitialized()) {
+                    const encryptedKey = await cryptoManager.encryptApiKey(combinedKey);
+                    requestBody = JSON.stringify({ 
+                        apiKey: '',  // Clear plaintext
+                        apiKeyEncrypted: encryptedKey 
+                    });
+                } else {
+                    // Fallback to plaintext if encryption not available
+                    requestBody = JSON.stringify({ apiKey: combinedKey });
+                }
+
                 // Save API key
                 const setKeyResponse = await Auth.fetchWithAuth(`/api/accounts/${pendingApiKeyAccountId}/set-api-key`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ apiKey: combinedKey })
+                    body: requestBody
                 });
 
                 if (!setKeyResponse.ok) {
@@ -3108,8 +3121,8 @@
                 // Close modal
                 closeApiKeyModal();
 
-                // Sync immediately
-                await syncTrading212Internal(pendingApiKeyAccountId);
+                // Sync immediately with the key still in memory
+                await syncTrading212Internal(pendingApiKeyAccountId, combinedKey);
 
             } catch (error) {
                 console.error('Error setting API key:', error);
@@ -3118,14 +3131,42 @@
         }
 
         async function syncTrading212(accountId) {
-            await syncTrading212Internal(accountId);
+            // For existing accounts, we need to prompt for API key since it's encrypted
+            if (cryptoManager && cryptoManager.isInitialized()) {
+                // Fetch account to check if it has encrypted API key
+                const accountsResponse = await Auth.fetchWithAuth('/api/accounts');
+                if (accountsResponse.ok) {
+                    const accounts = await accountsResponse.json();
+                    const account = accounts.find(a => a.id === accountId);
+                    
+                    if (account && account.apiKeyEncrypted) {
+                        alert('Please re-enter your Trading 212 API key to sync (for security, we cannot decrypt it for API calls)');
+                        openApiKeyModal(accountId);
+                        return;
+                    }
+                }
+            }
+            
+            await syncTrading212Internal(accountId, null);
         }
 
-        async function syncTrading212Internal(accountId) {
+        async function syncTrading212Internal(accountId, apiKey) {
             try {
-                const response = await Auth.fetchWithAuth(`/api/accounts/${accountId}/sync-trading212`, {
-                    method: 'POST'
-                });
+                let response;
+                
+                // If we have the decrypted API key in memory, use the encrypted endpoint
+                if (apiKey) {
+                    response = await Auth.fetchWithAuth(`/api/accounts/${accountId}/sync-trading212-encrypted`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ decryptedApiKey: apiKey })
+                    });
+                } else {
+                    // Legacy endpoint for plaintext keys
+                    response = await Auth.fetchWithAuth(`/api/accounts/${accountId}/sync-trading212`, {
+                        method: 'POST'
+                    });
+                }
 
                 const data = await response.json();
 

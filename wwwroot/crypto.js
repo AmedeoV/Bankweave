@@ -222,6 +222,22 @@ class CryptoManager {
         );
     }
 
+    // Encrypt API key
+    async encryptApiKey(apiKey) {
+        if (!apiKey) {
+            return null;
+        }
+        return await this.encrypt(apiKey);
+    }
+
+    // Decrypt API key
+    async decryptApiKey(encryptedApiKey) {
+        if (!encryptedApiKey) {
+            return null;
+        }
+        return await this.decrypt(encryptedApiKey);
+    }
+
     // Clear encryption key from memory
     clear() {
         this.encryptionKey = null;

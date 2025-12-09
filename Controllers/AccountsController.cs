@@ -438,7 +438,17 @@ public class AccountsController : ControllerBase
             return NotFound(new { message = "Account not found" });
         }
 
-        account.ApiKey = request.ApiKey;
+        // Store encrypted API key if provided, otherwise use plaintext (legacy)
+        if (!string.IsNullOrEmpty(request.ApiKeyEncrypted))
+        {
+            account.ApiKeyEncrypted = request.ApiKeyEncrypted;
+            account.ApiKey = null; // Clear legacy plaintext
+        }
+        else
+        {
+            account.ApiKey = request.ApiKey;
+        }
+        
         await _dbContext.SaveChangesAsync();
 
         _logger.LogInformation("API key set for account {AccountId}", accountId);
@@ -528,6 +538,88 @@ public class AccountsController : ControllerBase
         return Ok(new 
         { 
             message = message,
+            balance = cashBalance.Value,
+            lastSynced = account.LastSyncedAt,
+            transactionsImported = importedCount,
+            transactionsLinked = linkedCount
+        });
+    }
+
+    [HttpPost("{accountId}/sync-trading212-encrypted")]
+    public async Task<IActionResult> SyncTrading212Encrypted(Guid accountId, [FromBody] SyncWithEncryptedKeyRequest request)
+    {
+        var account = await _dbContext.FinancialAccounts.FindAsync(accountId);
+        if (account == null)
+        {
+            return NotFound(new { message = "Account not found" });
+        }
+
+        if (string.IsNullOrEmpty(request.DecryptedApiKey))
+        {
+            return BadRequest(new { message = "Decrypted API key is required" });
+        }
+
+        // Use the provided decrypted API key (decrypted client-side)
+        var cashBalance = await _trading212Service.GetCashBalanceAsync(request.DecryptedApiKey);
+        if (cashBalance == null)
+        {
+            return BadRequest(new { message = "Failed to fetch balance from Trading 212. Check your API key." });
+        }
+
+        account.CurrentBalance = cashBalance.Value;
+
+        // Fetch transactions
+        var transactions = await _trading212Service.GetTransactionsAsync(request.DecryptedApiKey);
+        if (transactions == null)
+        {
+            return BadRequest(new { message = "Failed to fetch transactions from Trading 212" });
+        }
+
+        // Import transactions (same logic as existing endpoint)
+        int importedCount = 0;
+        int linkedCount = 0;
+
+        foreach (var apiTxn in transactions)
+        {
+            var movement = _trading212MappingService.MapToMoneyMovement(accountId, apiTxn);
+            
+            var exists = await _dbContext.MoneyMovements
+                .AnyAsync(m => m.FinancialAccountId == accountId && 
+                             m.TransactionId == apiTxn.Reference);
+
+            if (!exists)
+            {
+                var csvMatch = await _dbContext.MoneyMovements
+                    .FirstOrDefaultAsync(m => 
+                        m.FinancialAccountId == accountId &&
+                        m.TransactionDate == movement.TransactionDate &&
+                        Math.Abs(m.Amount - movement.Amount) < 0.01m &&
+                        string.IsNullOrEmpty(m.TransactionId));
+
+                if (csvMatch != null)
+                {
+                    csvMatch.TransactionId = apiTxn.Reference;
+                    linkedCount++;
+                }
+                else
+                {
+                    movement.Id = Guid.NewGuid();
+                    movement.CreatedAt = DateTime.UtcNow();
+                    _dbContext.MoneyMovements.Add(movement);
+                    importedCount++;
+                }
+            }
+        }
+
+        account.LastSyncedAt = DateTime.UtcNow;
+        await _dbContext.SaveChangesAsync();
+
+        _logger.LogInformation("Synced Trading212 account {AccountId} with encrypted key, balance: {Balance}, imported {Imported} transactions", 
+            accountId, cashBalance.Value, importedCount);
+
+        return Ok(new 
+        { 
+            message = $"Balance synced: {cashBalance.Value:C}\n{importedCount} new transactions imported\n{linkedCount} transactions linked",
             balance = cashBalance.Value,
             lastSynced = account.LastSyncedAt,
             transactionsImported = importedCount,
@@ -753,6 +845,7 @@ public class ManualTransactionRequest
 public class SetApiKeyRequest
 {
     public string ApiKey { get; set; } = string.Empty;
+    public string? ApiKeyEncrypted { get; set; }
 }
 
 public class UpdateDescriptionRequest
@@ -774,4 +867,9 @@ public class BulkToggleEssentialExpenseRequest
 {
     public string Description { get; set; } = string.Empty;
     public bool IsEssential { get; set; }
+}
+
+public class SyncWithEncryptedKeyRequest
+{
+    public string DecryptedApiKey { get; set; } = string.Empty;
 }
