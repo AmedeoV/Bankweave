@@ -2892,12 +2892,64 @@
                         alert(`Success! Imported ${data.importedCount} transactions (${data.skippedCount} duplicates skipped). Balance: €${data.currentBalance.toFixed(2)}`);
                         await loadData();
                     }
+
+                    // Auto-encrypt the newly imported transactions if encryption is available
+                    if (cryptoManager && cryptoManager.isInitialized() && data.importedCount > 0) {
+                        await autoEncryptNewTransactions();
+                    }
                 } else {
                     alert(`Failed to import CSV: ${data.error || 'Unknown error'}`);
                 }
             } catch (error) {
                 console.error('Failed to upload CSV:', error);
                 alert('Failed to upload CSV');
+            }
+        }
+
+        // Auto-encrypt newly imported transactions
+        async function autoEncryptNewTransactions() {
+            try {
+                // Get migration status
+                const statusResponse = await Auth.fetchWithAuth('/api/encryptionmigration/status');
+                if (!statusResponse.ok) return;
+                
+                const status = await statusResponse.json();
+                
+                // If there are unencrypted transactions, encrypt them silently
+                if (status.unencryptedCount > 0) {
+                    const transactionsResponse = await Auth.fetchWithAuth('/api/accounts/transactions');
+                    if (!transactionsResponse.ok) return;
+                    
+                    const transactions = await transactionsResponse.json();
+                    
+                    // Filter unencrypted transactions
+                    const unencrypted = transactions.filter(t => 
+                        !t.descriptionEncrypted && !t.amountEncrypted && !t.categoryEncrypted
+                    );
+                    
+                    if (unencrypted.length === 0) return;
+                    
+                    // Encrypt them
+                    const encryptedBatch = [];
+                    for (const txn of unencrypted) {
+                        const encrypted = await cryptoManager.encryptTransaction(txn);
+                        encryptedBatch.push(encrypted);
+                    }
+                    
+                    // Send encrypted batch
+                    const migrateResponse = await Auth.fetchWithAuth('/api/encryptionmigration/migrate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ transactions: encryptedBatch })
+                    });
+                    
+                    if (migrateResponse.ok) {
+                        console.log(`Auto-encrypted ${encryptedBatch.length} newly imported transactions`);
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to auto-encrypt new transactions:', error);
+                // Silently fail - user can manually encrypt later
             }
         }
 
