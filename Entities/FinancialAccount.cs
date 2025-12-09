@@ -7,7 +7,6 @@ public class FinancialAccount
     public string Provider { get; set; } = string.Empty;
     public string ExternalId { get; set; } = string.Empty;
     public string DisplayName { get; set; } = string.Empty;
-    public string Iban { get; set; } = string.Empty;
     public string CurrencyCode { get; set; } = "EUR";
     public decimal CurrentBalance { get; set; }
     public decimal StartingBalance { get; set; }

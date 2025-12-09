@@ -1981,7 +1981,7 @@
                                         ${account.displayName}
                                         ${account.isCreditCard ? '<span style="background: #ef4444; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 8px;">CREDIT CARD</span>' : ''}
                                     </h3>
-                                    <p>${account.iban || 'No IBAN'} • ${account.provider}</p>
+                                    <p>${account.provider}</p>
                                 <p style="font-size: 11px; color: rgba(255, 255, 255, 0.5); margin-top: 5px;">
                                     Last synced: ${account.lastSynced ? new Date(account.lastSynced).toLocaleString() : 'Never'}
                                 </p>
