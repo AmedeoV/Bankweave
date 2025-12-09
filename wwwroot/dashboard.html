@@ -2219,7 +2219,7 @@
         }
 
         // Display transactions
-        function displayTransactions(transactions, containerId, filter = 'all', categoryFilter = '') {
+        function displayTransactions(transactions, containerId, filter = 'all', categoryFilter = '', useModalDropdown = false) {
             const container = document.getElementById(containerId);
             
             if (transactions.length === 0) {
@@ -2276,7 +2276,12 @@
                         const category = this.getAttribute('data-category');
                         console.log('Transaction ID:', txId, 'Category:', category);
                         if (txId && category) {
-                            showCategoryDropdown(txId, category);
+                            // Call appropriate dropdown function based on context
+                            if (useModalDropdown) {
+                                showCategoryDropdownModal(txId, category);
+                            } else {
+                                showCategoryDropdown(txId, category);
+                            }
                         } else {
                             console.error('Missing data attributes:', { txId, category });
                         }
@@ -2599,7 +2604,7 @@
             try {
                 const response = await Auth.fetchWithAuth(`/api/accounts/${accountId}/transactions?pageSize=100`);
                 const data = await response.json();
-                displayTransactions(data.transactions, 'modalTransactionsList');
+                displayTransactions(data.transactions, 'modalTransactionsList', 'all', '', true);
                 document.getElementById('transactionsModal').classList.add('active');
             } catch (error) {
                 console.error('Failed to load transactions:', error);
@@ -3724,20 +3729,16 @@
                 'Utilities'
             ];
 
-            // Find the badge span wrapper
-            const badgeWrapper = document.getElementById(`category-badge-modal-${transactionId}`);
+            // When called from displayTransactions in modal, IDs don't have -modal suffix
+            const badgeElement = document.getElementById(`category-badge-${transactionId}`);
             
-            if (!badgeWrapper) {
-                console.error('Badge wrapper not found for transaction:', transactionId);
-                return;
-            }
-            
-            // Get the actual badge element inside the wrapper
-            const badgeElement = badgeWrapper.querySelector('.category-badge');
             if (!badgeElement) {
-                console.error('Badge element not found inside wrapper');
+                console.error('Badge element not found for transaction:', transactionId);
                 return;
             }
+            
+            // Get the parent element
+            const parentElement = badgeElement.parentElement;
             
             // Create container span for dropdown
             const dropdownContainer = document.createElement('span');
@@ -3778,14 +3779,14 @@
             dropdownContainer.appendChild(saveBtn);
             dropdownContainer.appendChild(cancelBtn);
             
-            // Get parent element (should be the div containing the badge wrapper)
-            const parentElement = badgeWrapper.parentElement;
+            // Store original badge display
+            badgeElement.dataset.originalDisplay = badgeElement.style.display || 'inline';
             
-            // Insert dropdown after the badge wrapper
-            parentElement.insertBefore(dropdownContainer, badgeWrapper.nextSibling);
+            // Insert dropdown BEFORE hiding badge
+            parentElement.insertBefore(dropdownContainer, badgeElement);
             
-            // Hide the badge wrapper
-            badgeWrapper.style.display = 'none';
+            // Now hide the badge
+            badgeElement.style.display = 'none';
             
             console.log('Modal dropdown created and inserted');
             console.log('Select offsetWidth:', selectEl.offsetWidth);
@@ -3847,12 +3848,12 @@
 
         // Cancel category change in modal
         function cancelCategoryChangeModal(transactionId, currentCategory) {
-            const badgeWrapper = document.getElementById(`category-badge-modal-${transactionId}`);
+            const badgeElement = document.getElementById(`category-badge-${transactionId}`);
             const dropdownElement = document.getElementById(`category-dropdown-modal-${transactionId}`);
             
-            // Show badge wrapper again
-            if (badgeWrapper) {
-                badgeWrapper.style.display = 'inline';
+            // Show badge again
+            if (badgeElement) {
+                badgeElement.style.display = badgeElement.dataset.originalDisplay || 'inline';
             }
             
             // Remove the dynamically created dropdown
