@@ -2267,12 +2267,18 @@
             
             // Attach event listeners to category badges
             setTimeout(() => {
-                container.querySelectorAll('.category-badge').forEach(badge => {
-                    badge.addEventListener('click', function() {
+                const badges = container.querySelectorAll('.category-badge');
+                console.log(`Attaching event listeners to ${badges.length} category badges in ${containerId}`);
+                badges.forEach(badge => {
+                    badge.addEventListener('click', function(e) {
+                        console.log('Category badge clicked!', this);
                         const txId = this.getAttribute('data-transaction-id');
                         const category = this.getAttribute('data-category');
+                        console.log('Transaction ID:', txId, 'Category:', category);
                         if (txId && category) {
                             showCategoryDropdown(txId, category);
+                        } else {
+                            console.error('Missing data attributes:', { txId, category });
                         }
                     });
                 });
