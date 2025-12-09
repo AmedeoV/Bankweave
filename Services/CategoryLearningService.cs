@@ -32,26 +32,43 @@ public class CategoryLearningService
         if (string.IsNullOrWhiteSpace(identifier))
         {
             _logger.LogInformation("No clear identifier found for transaction {TransactionId}", transactionId);
-            return 0;
+            return 1; // Return 1 since we updated the original transaction
         }
 
-        // Find all similar transactions and update their categories
-        var similarTransactions = await _dbContext.MoneyMovements
-            .Where(m => m.CounterpartyName != null && m.CounterpartyName.Contains(identifier) ||
-                       m.Description != null && m.Description.Contains(identifier))
-            .ToListAsync();
-
-        _logger.LogInformation("Found {Count} similar transactions for identifier '{Identifier}'", 
-            similarTransactions.Count, identifier);
-
-        foreach (var tx in similarTransactions)
+        try
         {
-            tx.Category = newCategory;
-        }
+            // Find all similar transactions and update their categories
+            // Use proper parentheses to group OR conditions correctly
+            var similarTransactions = await _dbContext.MoneyMovements
+                .Where(m => 
+                    (m.CounterpartyName != null && m.CounterpartyName.Contains(identifier)) ||
+                    (m.Description != null && m.Description.Contains(identifier)))
+                .ToListAsync();
 
-        await _dbContext.SaveChangesAsync();
-        
-        return similarTransactions.Count;
+            _logger.LogInformation("Found {Count} similar transactions for identifier '{Identifier}'", 
+                similarTransactions.Count, identifier);
+
+            if (similarTransactions.Count == 0)
+            {
+                _logger.LogInformation("No similar transactions found, returning 1 for the updated transaction");
+                return 1; // Return 1 since we updated the original transaction
+            }
+
+            foreach (var tx in similarTransactions)
+            {
+                tx.Category = newCategory;
+                // Note: CategoryEncrypted will be updated by the frontend after reload
+            }
+
+            await _dbContext.SaveChangesAsync();
+            
+            return similarTransactions.Count;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating similar transactions for identifier '{Identifier}'", identifier);
+            return 1; // Return 1 since we at least updated the original transaction
+        }
     }
 
     private string? GetTransactionIdentifier(MoneyMovement transaction)
