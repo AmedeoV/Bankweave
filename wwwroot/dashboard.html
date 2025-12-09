@@ -2287,6 +2287,7 @@
 
         // Show category dropdown when badge is clicked
         function showCategoryDropdown(transactionId, currentCategory) {
+            console.log('showCategoryDropdown called with:', transactionId, currentCategory);
             
             const categories = [
                 'Balance Payment',
@@ -2327,10 +2328,8 @@
             
             if (!badgeElement) {
                 console.error('Could not find badge element for transaction', transactionId);
-                return;
-            }
-            
-            // Get the parent element (the <p> tag)
+                alert(`Error: Could not find category badge for transaction ${transactionId}. The transaction may not be loaded properly.`);\n                return;\n            }\n            \n            console.log('Badge element found:', badgeElement);
+            \n            // Get the parent element (the <p> tag)
             const parentElement = badgeElement.parentElement;
             
             // Create container span for dropdown
@@ -3502,6 +3501,15 @@
         // Update category
         async function updateSingleTransactionCategory(transactionId, category) {
             try {
+                if (!transactionId) {
+                    alert('Error: Transaction ID is missing');
+                    return;
+                }
+                if (!category) {
+                    alert('Error: Category is missing');
+                    return;
+                }
+                
                 const requestBody = { category };
                 
                 // Encrypt category if crypto is initialized
@@ -3528,11 +3536,12 @@
                     alert(`✅ Category updated to "${category}"`);
                     await loadData();
                 } else {
-                    alert('Failed to update category');
+                    const errorText = await response.text();
+                    alert(`Failed to update category: ${response.status} - ${errorText}`);
                 }
             } catch (error) {
                 console.error('Error updating category:', error);
-                alert('Failed to update category');
+                alert(`Failed to update category: ${error.message}`);
             }
         }
 
