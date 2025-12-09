@@ -65,6 +65,12 @@ public class EncryptionMigrationController : ControllerBase
         var user = await _context.Users.FindAsync(userId);
         var userNamesEncrypted = user?.FirstNameEncrypted != null || user?.LastNameEncrypted != null;
         var userNamesNeedMigration = (user?.FirstName != null || user?.LastName != null) && !userNamesEncrypted;
+        
+        // Check balance snapshots
+        var totalSnapshots = await _context.BalanceSnapshots
+            .CountAsync(s => s.UserId == userId);
+        var encryptedSnapshots = await _context.BalanceSnapshots
+            .CountAsync(s => s.UserId == userId && s.AccountBalancesEncrypted != null);
 
         return Ok(new MigrationStatus
         {
@@ -80,12 +86,16 @@ public class EncryptionMigrationController : ControllerBase
             TotalScenarios = totalScenarios,
             EncryptedScenarios = encryptedScenarios,
             UnencryptedScenarios = totalScenarios - encryptedScenarios,
+            TotalSnapshots = totalSnapshots,
+            EncryptedSnapshots = encryptedSnapshots,
+            UnencryptedSnapshots = totalSnapshots - encryptedSnapshots,
             UserNamesEncrypted = userNamesEncrypted,
             UserNamesNeedMigration = userNamesNeedMigration,
             NeedsMigration = unencryptedTransactions > 0 || 
                             (totalAccounts - encryptedAccounts) > 0 ||
                             (totalRules - encryptedRules) > 0 ||
                             (totalScenarios - encryptedScenarios) > 0 ||
+                            (totalSnapshots - encryptedSnapshots) > 0 ||
                             userNamesNeedMigration
         });
     }
@@ -348,6 +358,9 @@ public class MigrationStatus
     public int TotalScenarios { get; set; }
     public int EncryptedScenarios { get; set; }
     public int UnencryptedScenarios { get; set; }
+    public int TotalSnapshots { get; set; }
+    public int EncryptedSnapshots { get; set; }
+    public int UnencryptedSnapshots { get; set; }
     public bool UserNamesEncrypted { get; set; }
     public bool UserNamesNeedMigration { get; set; }
     public bool NeedsMigration { get; set; }

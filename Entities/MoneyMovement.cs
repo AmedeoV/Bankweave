@@ -12,7 +12,6 @@ public class MoneyMovement
     public string CurrencyCode { get; set; } = "EUR";
     public string Description { get; set; } = string.Empty;
     public string? CounterpartyName { get; set; }
-    public string? CounterpartyAccount { get; set; }
     public string? Category { get; set; }
     public bool IsEssentialExpense { get; set; } = false;
     public DateTime CreatedAt { get; set; }

@@ -4995,6 +4995,23 @@
                 const response = await Auth.fetchWithAuth('/api/stats/snapshot', { method: 'POST' });
                 const result = await response.json();
                 
+                // Encrypt account balances if encryption is available
+                if (cryptoManager && cryptoManager.isInitialized && result.accountBalances) {
+                    try {
+                        const encryptedBalances = await cryptoManager.encrypt(result.accountBalances);
+                        await Auth.fetchWithAuth('/api/stats/snapshot/encrypt', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                snapshotId: result.id,
+                                accountBalancesEncrypted: encryptedBalances
+                            })
+                        });
+                    } catch (error) {
+                        console.error('Failed to encrypt snapshot balances:', error);
+                    }
+                }
+                
                 alert(`Balance snapshot recorded: ${formatCurrency(result.totalBalance)}`);
                 await loadBalanceHistory();
             } catch (error) {

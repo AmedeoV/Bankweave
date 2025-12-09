@@ -270,8 +270,33 @@ public class StatsController : ControllerBase
         return Ok(new { 
             id = snapshot.Id, 
             timestamp = snapshot.Timestamp, 
-            totalBalance = snapshot.TotalBalance 
+            totalBalance = snapshot.TotalBalance,
+            accountBalances = JsonSerializer.Serialize(accountBalances)
         });
+    }
+
+    [HttpPost("snapshot/encrypt")]
+    public async Task<IActionResult> EncryptBalanceSnapshot([FromBody] EncryptBalanceSnapshotRequest request)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var snapshot = await _dbContext.BalanceSnapshots
+            .FirstOrDefaultAsync(s => s.Id == request.SnapshotId && s.UserId == userId);
+
+        if (snapshot == null)
+        {
+            return NotFound("Snapshot not found");
+        }
+
+        snapshot.AccountBalancesEncrypted = request.AccountBalancesEncrypted;
+        await _dbContext.SaveChangesAsync();
+
+        return Ok(new { success = true });
+    }
+
+    public class EncryptBalanceSnapshotRequest
+    {
+        public Guid SnapshotId { get; set; }
+        public string AccountBalancesEncrypted { get; set; } = string.Empty;
     }
 
     [HttpGet("recurring-transactions")]
@@ -359,9 +384,8 @@ public class StatsController : ControllerBase
         {
             timestamp = s.Timestamp,
             totalBalance = s.TotalBalance,
-            accountBalances = s.AccountBalances != null 
-                ? JsonSerializer.Deserialize<object>(s.AccountBalances) 
-                : null
+            accountBalances = s.AccountBalances,
+            accountBalancesEncrypted = s.AccountBalancesEncrypted
         }));
     }
 

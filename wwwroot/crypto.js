@@ -269,6 +269,15 @@ class CryptoManager {
         };
     }
 
+    // Decrypt balance snapshot
+    async decryptBalanceSnapshot(snapshot) {
+        if (!snapshot) return snapshot;
+        return {
+            ...snapshot,
+            accountBalances: snapshot.accountBalancesEncrypted ? await this.decrypt(snapshot.accountBalancesEncrypted) : snapshot.accountBalances
+        };
+    }
+
     // Clear encryption key from memory
     clear() {
         this.encryptionKey = null;
