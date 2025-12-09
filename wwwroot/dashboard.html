@@ -2337,6 +2337,8 @@
             // Hide badge, show dropdown
             badgeElement.style.display = 'none';
             dropdownElement.style.display = 'inline-block';
+            dropdownElement.style.minWidth = '200px';
+            dropdownElement.style.verticalAlign = 'middle';
             console.log('Badge hidden, dropdown shown');
             console.log('Dropdown element before innerHTML:', dropdownElement);
             
@@ -2345,11 +2347,11 @@
             ).join('');
             
             const dropdownHTML = `
-                <select id="select-${transactionId}" class="category-select" style="padding: 4px 8px; border: 1px solid #e5e7eb; border-radius: 4px; font-size: 12px; cursor: pointer; color: #1f2937; background: white;">
+                <select id="select-${transactionId}" class="category-select" style="padding: 4px 8px; border: 1px solid #e5e7eb; border-radius: 4px; font-size: 12px; cursor: pointer; color: #1f2937; background: white; min-width: 120px; display: inline-block;">
                     ${categoryOptions}
                 </select>
-                <button onclick="showCategorySaveOptions('${transactionId}', '${currentCategory}')" style="margin-left: 4px; padding: 4px 8px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;">✓</button>
-                <button onclick="cancelCategoryChange('${transactionId}', '${currentCategory}')" style="margin-left: 4px; padding: 4px 8px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;">✕</button>
+                <button onclick="showCategorySaveOptions('${transactionId}', '${currentCategory}')" style="display: inline-block; margin-left: 4px; padding: 4px 8px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;">✓</button>
+                <button onclick="cancelCategoryChange('${transactionId}', '${currentCategory}')" style="display: inline-block; margin-left: 4px; padding: 4px 8px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;">✕</button>
             `;
             
             console.log('Setting dropdown HTML, length:', dropdownHTML.length);
