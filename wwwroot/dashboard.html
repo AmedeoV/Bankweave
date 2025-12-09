@@ -3746,16 +3746,16 @@
             // Get the parent element
             const parentElement = badgeElement.parentElement;
             
-            // Create container span for dropdown
+            // Create container span for dropdown - use position absolute to escape collapsed parent
             const dropdownContainer = document.createElement('span');
             dropdownContainer.id = `category-dropdown-modal-${transactionId}`;
-            dropdownContainer.style.cssText = 'display: inline-block !important; margin-left: 5px; vertical-align: middle; visibility: visible !important; opacity: 1 !important;';
+            dropdownContainer.style.cssText = 'position: relative; display: inline-block; margin-left: 5px; vertical-align: middle;';
             
             // Create select element
             const selectEl = document.createElement('select');
             selectEl.id = `select-modal-${transactionId}`;
             selectEl.className = 'category-select';
-            selectEl.style.cssText = 'padding: 4px 8px; border: 1px solid #e5e7eb; border-radius: 4px; font-size: 12px; cursor: pointer; color: #1f2937; background: white; min-width: 120px; width: auto !important; height: auto !important; display: inline-block !important; visibility: visible !important;';
+            selectEl.style.cssText = 'padding: 4px 8px; border: 1px solid #e5e7eb; border-radius: 4px; font-size: 12px; cursor: pointer; color: #1f2937; background: white; min-width: 120px; width: 120px; height: 30px;';
             
             // Add options
             categories.forEach(cat => {
