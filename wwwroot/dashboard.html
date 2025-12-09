@@ -3749,13 +3749,13 @@
             // Create container span for dropdown
             const dropdownContainer = document.createElement('span');
             dropdownContainer.id = `category-dropdown-modal-${transactionId}`;
-            dropdownContainer.style.cssText = 'display: inline-block; margin-left: 5px; vertical-align: middle;';
+            dropdownContainer.style.cssText = 'display: inline-block !important; margin-left: 5px; vertical-align: middle; visibility: visible !important; opacity: 1 !important;';
             
             // Create select element
             const selectEl = document.createElement('select');
             selectEl.id = `select-modal-${transactionId}`;
             selectEl.className = 'category-select';
-            selectEl.style.cssText = 'padding: 4px 8px; border: 1px solid #e5e7eb; border-radius: 4px; font-size: 12px; cursor: pointer; color: #1f2937; background: white; min-width: 120px;';
+            selectEl.style.cssText = 'padding: 4px 8px; border: 1px solid #e5e7eb; border-radius: 4px; font-size: 12px; cursor: pointer; color: #1f2937; background: white; min-width: 120px; width: auto !important; height: auto !important; display: inline-block !important; visibility: visible !important;';
             
             // Add options
             categories.forEach(cat => {
@@ -3788,26 +3788,30 @@
             // Store original badge display
             badgeElement.dataset.originalDisplay = badgeElement.style.display || 'inline';
             
-            console.log('Parent element:', parentElement);
-            console.log('Parent innerHTML length:', parentElement.innerHTML.length);
-            console.log('Parent children count:', parentElement.children.length);
-            console.log('Parent offsetWidth BEFORE insert:', parentElement.offsetWidth);
-            console.log('Parent offsetHeight BEFORE insert:', parentElement.offsetHeight);
-            
             // Insert dropdown BEFORE hiding badge
             parentElement.insertBefore(dropdownContainer, badgeElement);
-            
-            console.log('Parent offsetWidth AFTER insert:', parentElement.offsetWidth);
-            console.log('Parent offsetHeight AFTER insert:', parentElement.offsetHeight);
             
             // Now hide the badge
             badgeElement.style.display = 'none';
             
-            console.log('Parent offsetWidth AFTER hiding badge:', parentElement.offsetWidth);
-            console.log('Parent offsetHeight AFTER hiding badge:', parentElement.offsetHeight);
-            console.log('Modal dropdown created and inserted');
-            console.log('Select offsetWidth:', selectEl.offsetWidth);
-            console.log('Select offsetHeight:', selectEl.offsetHeight);
+            // Force browser to recalculate layout with requestAnimationFrame
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    console.log('After 2 animation frames:');
+                    console.log('Select offsetWidth:', selectEl.offsetWidth);
+                    console.log('Select offsetHeight:', selectEl.offsetHeight);
+                    console.log('Parent offsetWidth:', parentElement.offsetWidth);
+                    console.log('Parent offsetHeight:', parentElement.offsetHeight);
+                    
+                    // If still 0, try forcing layout by reading offsetWidth
+                    if (selectEl.offsetWidth === 0) {
+                        console.log('Still 0! Checking select visibility and parent chain...');
+                        console.log('Select display:', window.getComputedStyle(selectEl).display);
+                        console.log('Select visibility:', window.getComputedStyle(selectEl).visibility);
+                        console.log('DropdownContainer display:', window.getComputedStyle(dropdownContainer).display);
+                    }
+                });
+            });
         }
 
         // Show options for saving category change in modal
