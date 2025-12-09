@@ -238,6 +238,37 @@ class CryptoManager {
         return await this.decrypt(encryptedApiKey);
     }
 
+    // Decrypt account data
+    async decryptAccount(account) {
+        if (!account) return account;
+        return {
+            ...account,
+            displayName: account.displayNameEncrypted ? await this.decrypt(account.displayNameEncrypted) : account.displayName
+        };
+    }
+
+    // Decrypt categorization rule
+    async decryptRule(rule) {
+        if (!rule) return rule;
+        return {
+            ...rule,
+            pattern: rule.patternEncrypted ? await this.decrypt(rule.patternEncrypted) : rule.pattern
+        };
+    }
+
+    // Decrypt scenario
+    async decryptScenario(scenario) {
+        if (!scenario) return scenario;
+        return {
+            ...scenario,
+            name: scenario.nameEncrypted ? await this.decrypt(scenario.nameEncrypted) : scenario.name,
+            description: scenario.descriptionEncrypted ? await this.decrypt(scenario.descriptionEncrypted) : scenario.description,
+            customTransactionsJson: scenario.customTransactionsJsonEncrypted ? await this.decrypt(scenario.customTransactionsJsonEncrypted) : scenario.customTransactionsJson,
+            disabledTransactionsJson: scenario.disabledTransactionsJsonEncrypted ? await this.decrypt(scenario.disabledTransactionsJsonEncrypted) : scenario.disabledTransactionsJson,
+            statsJson: scenario.statsJsonEncrypted ? await this.decrypt(scenario.statsJsonEncrypted) : scenario.statsJson
+        };
+    }
+
     // Clear encryption key from memory
     clear() {
         this.encryptionKey = null;

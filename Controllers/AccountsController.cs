@@ -52,12 +52,14 @@ public class AccountsController : ControllerBase
             {
                 id = a.Id,
                 displayName = a.DisplayName,
+                displayNameEncrypted = a.DisplayNameEncrypted,
                 provider = a.Provider,
                 balance = a.CurrentBalance,
                 currency = a.CurrencyCode,
                 lastSynced = a.LastSyncedAt,
                 excludeFromTotal = a.ExcludeFromTotal,
-                isCreditCard = a.IsCreditCard
+                isCreditCard = a.IsCreditCard,
+                apiKeyEncrypted = a.ApiKeyEncrypted
             })
             .ToListAsync();
 

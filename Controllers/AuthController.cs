@@ -104,7 +104,9 @@ public class AuthController : ControllerBase
             Token = token,
             Email = user.Email!,
             FirstName = user.FirstName,
+            FirstNameEncrypted = user.FirstNameEncrypted,
             LastName = user.LastName,
+            LastNameEncrypted = user.LastNameEncrypted,
             EncryptionSalt = user.EncryptionSalt,
             Expiration = DateTime.UtcNow.AddDays(7)
         });

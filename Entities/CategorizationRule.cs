@@ -5,6 +5,7 @@ public class CategorizationRule
     public Guid Id { get; set; }
     public string? UserId { get; set; }
     public string Pattern { get; set; } = string.Empty;
+    public string? PatternEncrypted { get; set; }
     public string Category { get; set; } = string.Empty;
     public bool IsRegex { get; set; } = false;
     public bool CaseSensitive { get; set; } = false;

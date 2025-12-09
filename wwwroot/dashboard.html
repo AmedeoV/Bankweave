@@ -1937,19 +1937,29 @@
         async function loadAccounts() {
             try {
                 const response = await Auth.fetchWithAuth('/api/accounts');
-                const accounts = await response.json();
+                let accounts = await response.json();
                 
-                // Decrypt API keys if encryption is initialized and store in sessionStorage
+                // Decrypt data if encryption is initialized
                 if (cryptoManager && cryptoManager.isInitialized) {
-                    for (const account of accounts) {
-                        if (account.apiKeyEncrypted) {
+                    for (let i = 0; i < accounts.length; i++) {
+                        // Decrypt API keys and store in sessionStorage
+                        if (accounts[i].apiKeyEncrypted) {
                             try {
-                                const decryptedKey = await cryptoManager.decryptApiKey(account.apiKeyEncrypted);
+                                const decryptedKey = await cryptoManager.decryptApiKey(accounts[i].apiKeyEncrypted);
                                 if (decryptedKey) {
-                                    sessionStorage.setItem(`_apik_${account.id}`, decryptedKey);
+                                    sessionStorage.setItem(`_apik_${accounts[i].id}`, decryptedKey);
                                 }
                             } catch (error) {
-                                console.error(`Failed to decrypt API key for account ${account.id}:`, error);
+                                console.error(`Failed to decrypt API key for account ${accounts[i].id}:`, error);
+                            }
+                        }
+                        
+                        // Decrypt account display name
+                        if (accounts[i].displayNameEncrypted) {
+                            try {
+                                accounts[i].displayName = await cryptoManager.decrypt(accounts[i].displayNameEncrypted);
+                            } catch (error) {
+                                console.error(`Failed to decrypt display name for account ${accounts[i].id}:`, error);
                             }
                         }
                     }

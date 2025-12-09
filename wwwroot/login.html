@@ -248,14 +248,27 @@
                 // Store token and user info
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('userEmail', data.email);
-                if (data.firstName) localStorage.setItem('userFirstName', data.firstName);
-                if (data.lastName) localStorage.setItem('userLastName', data.lastName);
                 
                 // Initialize encryption with user's password and salt
                 if (data.encryptionSalt) {
                     try {
                         await window.cryptoManager.initialize(password, data.encryptionSalt);
                         localStorage.setItem('encryptionSalt', data.encryptionSalt);
+                        
+                        // Decrypt and store user names if encrypted
+                        if (data.firstNameEncrypted) {
+                            const decryptedFirstName = await window.cryptoManager.decrypt(data.firstNameEncrypted);
+                            localStorage.setItem('userFirstName', decryptedFirstName);
+                        } else if (data.firstName) {
+                            localStorage.setItem('userFirstName', data.firstName);
+                        }
+                        
+                        if (data.lastNameEncrypted) {
+                            const decryptedLastName = await window.cryptoManager.decrypt(data.lastNameEncrypted);
+                            localStorage.setItem('userLastName', decryptedLastName);
+                        } else if (data.lastName) {
+                            localStorage.setItem('userLastName', data.lastName);
+                        }
                     } catch (error) {
                         console.error('Failed to initialize encryption:', error);
                         errorMessage.textContent = 'Failed to initialize encryption. Please try again.';
@@ -264,6 +277,10 @@
                         loginBtn.innerHTML = 'Sign In';
                         return;
                     }
+                } else {
+                    // No encryption, store plaintext names
+                    if (data.firstName) localStorage.setItem('userFirstName', data.firstName);
+                    if (data.lastName) localStorage.setItem('userLastName', data.lastName);
                 }
                 
                 // Small delay to ensure sessionStorage is persisted

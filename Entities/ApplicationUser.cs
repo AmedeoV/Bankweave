@@ -5,7 +5,9 @@ namespace Bankweave.Entities;
 public class ApplicationUser : IdentityUser
 {
     public string? FirstName { get; set; }
+    public string? FirstNameEncrypted { get; set; }
     public string? LastName { get; set; }
+    public string? LastNameEncrypted { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
     // Encryption salt for deriving user's encryption key from password
