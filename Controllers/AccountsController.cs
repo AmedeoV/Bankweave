@@ -736,6 +736,7 @@ public class AccountsController : ControllerBase
         }
 
         transaction.Category = request.Category;
+        transaction.CategoryEncrypted = request.CategoryEncrypted;
         await _dbContext.SaveChangesAsync();
 
         _logger.LogInformation("Updated category for single transaction {TransactionId} to {Category}", 
@@ -757,6 +758,7 @@ public class AccountsController : ControllerBase
         }
 
         transaction.Category = request.Category;
+        transaction.CategoryEncrypted = request.CategoryEncrypted;
         await _dbContext.SaveChangesAsync();
 
         _logger.LogInformation("Updated category for transaction {TransactionId} to {Category}", 
@@ -864,6 +866,7 @@ public class UpdateDescriptionRequest
 public class UpdateCategoryRequest
 {
     public string Category { get; set; } = string.Empty;
+    public string? CategoryEncrypted { get; set; }
 }
 
 public class ToggleEssentialExpenseRequest

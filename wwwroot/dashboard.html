@@ -3428,10 +3428,20 @@
         // Update category
         async function updateSingleTransactionCategory(transactionId, category) {
             try {
-                // Use the encrypted transaction helper
-                const success = await updateTransactionCategory(transactionId, category, 'single');
+                const requestBody = { category };
+                
+                // Encrypt category if crypto is initialized
+                if (cryptoManager && cryptoManager.isInitialized) {
+                    requestBody.categoryEncrypted = await cryptoManager.encrypt(category);
+                }
+                
+                const response = await Auth.fetchWithAuth(`/api/accounts/transactions/${transactionId}/category/single`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
+                });
 
-                if (success) {
+                if (response.ok) {
                     // Update the badge immediately for visual feedback
                     const badge = document.querySelector(`[data-transaction-id="${transactionId}"] .category-badge`);
                     if (badge) {
@@ -3454,10 +3464,17 @@
 
         async function updateTransactionCategory(transactionId, category) {
             try {
+                const requestBody = { category };
+                
+                // Encrypt category if crypto is initialized
+                if (cryptoManager && cryptoManager.isInitialized) {
+                    requestBody.categoryEncrypted = await cryptoManager.encrypt(category);
+                }
+                
                 const response = await Auth.fetchWithAuth(`/api/accounts/transactions/${transactionId}/category`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ category })
+                    body: JSON.stringify(requestBody)
                 });
 
                 if (response.ok) {
@@ -3570,6 +3587,8 @@
 
         // Show category dropdown in modal
         function showCategoryDropdownModal(transactionId, currentCategory) {
+            console.log('showCategoryDropdownModal called:', transactionId, currentCategory);
+            
             const categories = [
                 'Balance Payment',
                 'Banking Fees',
@@ -3607,6 +3626,15 @@
 
             const badgeElement = document.getElementById(`category-badge-modal-${transactionId}`);
             const dropdownElement = document.getElementById(`category-dropdown-modal-${transactionId}`);
+            
+            if (!badgeElement || !dropdownElement) {
+                console.error('Elements not found:', {
+                    badgeElement,
+                    dropdownElement,
+                    transactionId
+                });
+                return;
+            }
             
             // Hide badge, show dropdown
             badgeElement.style.display = 'none';
