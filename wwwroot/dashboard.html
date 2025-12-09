@@ -2268,13 +2268,10 @@
             // Attach event listeners to category badges
             setTimeout(() => {
                 const badges = container.querySelectorAll('.category-badge');
-                console.log(`Attaching event listeners to ${badges.length} category badges in ${containerId}`);
                 badges.forEach(badge => {
                     badge.addEventListener('click', function(e) {
-                        console.log('Category badge clicked!', this);
                         const txId = this.getAttribute('data-transaction-id');
                         const category = this.getAttribute('data-category');
-                        console.log('Transaction ID:', txId, 'Category:', category);
                         if (txId && category) {
                             // Call appropriate dropdown function based on context
                             if (useModalDropdown) {
@@ -2282,8 +2279,6 @@
                             } else {
                                 showCategoryDropdown(txId, category);
                             }
-                        } else {
-                            console.error('Missing data attributes:', { txId, category });
                         }
                     });
                 });
@@ -2292,7 +2287,6 @@
 
         // Show category dropdown when badge is clicked
         function showCategoryDropdown(transactionId, currentCategory) {
-            console.log('showCategoryDropdown called with:', transactionId, currentCategory);
             
             const categories = [
                 'Balance Payment',
@@ -2386,31 +2380,6 @@
             
             // Now hide the badge AFTER dropdown is in place
             badgeElement.style.display = 'none';
-            
-            console.log('Dropdown created and inserted into DOM');
-            console.log('Parent element after insertion:', parentElement);
-            console.log('Parent offsetWidth:', parentElement.offsetWidth);
-            console.log('Parent offsetHeight:', parentElement.offsetHeight);
-            
-            // Check if parent or ancestors are hidden
-            let el = parentElement;
-            let depth = 0;
-            while (el && depth < 10) {
-                const styles = window.getComputedStyle(el);
-                console.log(`Ancestor ${depth} (${el.tagName}):`, 
-                    'display:', styles.display, 
-                    'visibility:', styles.visibility,
-                    'offsetWidth:', el.offsetWidth,
-                    'offsetHeight:', el.offsetHeight);
-                el = el.parentElement;
-                depth++;
-            }
-            
-            console.log('Select element:', selectEl);
-            console.log('Select offsetWidth:', selectEl.offsetWidth);
-            console.log('Select offsetHeight:', selectEl.offsetHeight);
-            console.log('Dropdown container offsetWidth:', dropdownContainer.offsetWidth);
-            console.log('Dropdown container offsetHeight:', dropdownContainer.offsetHeight);
         }
 
         // Show options for saving category change
@@ -3692,13 +3661,6 @@
 
         // Show category dropdown in modal
         function showCategoryDropdownModal(transactionId, currentCategory) {
-            console.log('showCategoryDropdownModal called:', transactionId, currentCategory);
-            
-            // Check if modal is visible
-            const modal = document.getElementById('transactionsModal');
-            console.log('Modal element:', modal);
-            console.log('Modal display:', window.getComputedStyle(modal).display);
-            console.log('Modal has active class:', modal.classList.contains('active'));
             
             const categories = [
                 'Balance Payment',
@@ -3740,11 +3702,8 @@
             const badgeElement = modalContainer.querySelector(`#category-badge-${transactionId}`);
             
             if (!badgeElement) {
-                console.error('Badge element not found in modal for transaction:', transactionId);
                 return;
             }
-            
-            console.log('Found badge in modal:', badgeElement);
             
             // Get the parent element
             const parentElement = badgeElement.parentElement;
@@ -3796,40 +3755,6 @@
             
             // Now hide the badge
             badgeElement.style.display = 'none';
-            
-            // Force browser to recalculate layout with requestAnimationFrame
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    console.log('After 2 animation frames:');
-                    console.log('Select offsetWidth:', selectEl.offsetWidth);
-                    console.log('Select offsetHeight:', selectEl.offsetHeight);
-                    console.log('Select getBoundingClientRect:', selectEl.getBoundingClientRect());
-                    console.log('Parent offsetWidth:', parentElement.offsetWidth);
-                    console.log('Parent offsetHeight:', parentElement.offsetHeight);
-                    
-                    // Check for transforms
-                    let el = selectEl;
-                    let depth = 0;
-                    console.log('=== Checking for transforms/scale ===');
-                    while (el && depth < 8) {
-                        const styles = window.getComputedStyle(el);
-                        const transform = styles.transform;
-                        if (transform !== 'none') {
-                            console.log(`${depth} ${el.tagName}${el.id ? '#' + el.id : ''}: transform=${transform}`);
-                        }
-                        el = el.parentElement;
-                        depth++;
-                    }
-                    
-                    // If still 0, try forcing layout by reading offsetWidth
-                    if (selectEl.offsetWidth === 0) {
-                        console.log('Still 0! Checking select visibility and parent chain...');
-                        console.log('Select display:', window.getComputedStyle(selectEl).display);
-                        console.log('Select visibility:', window.getComputedStyle(selectEl).visibility);
-                        console.log('DropdownContainer display:', window.getComputedStyle(dropdownContainer).display);
-                    }
-                });
-            });
         }
 
         // Show options for saving category change in modal
