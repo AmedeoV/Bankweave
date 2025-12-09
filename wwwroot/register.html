@@ -348,15 +348,32 @@
                 } else {
                     // Show error message
                     let errorText = 'Registration failed. Please try again.';
+                    
+                    // Log full response for debugging
+                    console.error('Registration failed:', data);
+                    
                     if (data.message) {
                         errorText = data.message;
                     } else if (data.errors) {
                         // Handle validation errors from Identity
-                        const errors = Array.isArray(data.errors) 
-                            ? data.errors.map(e => e.description || e).join(' ')
-                            : 'Please check your input and try again.';
-                        errorText = errors;
+                        if (Array.isArray(data.errors)) {
+                            errorText = data.errors.map(e => e.description || e.code || e).join('. ');
+                        } else if (typeof data.errors === 'object') {
+                            // Handle ModelState errors
+                            const errorMessages = [];
+                            for (const key in data.errors) {
+                                if (Array.isArray(data.errors[key])) {
+                                    errorMessages.push(...data.errors[key]);
+                                } else {
+                                    errorMessages.push(data.errors[key]);
+                                }
+                            }
+                            errorText = errorMessages.join('. ');
+                        } else {
+                            errorText = 'Please check your input and try again.';
+                        }
                     }
+                    
                     errorMessage.textContent = errorText;
                     errorMessage.classList.add('show');
                 }
