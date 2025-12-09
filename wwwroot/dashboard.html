@@ -2328,8 +2328,13 @@
             
             if (!badgeElement) {
                 console.error('Could not find badge element for transaction', transactionId);
-                alert(`Error: Could not find category badge for transaction ${transactionId}. The transaction may not be loaded properly.`);\n                return;\n            }\n            \n            console.log('Badge element found:', badgeElement);
-            \n            // Get the parent element (the <p> tag)
+                alert(`Error: Could not find category badge for transaction ${transactionId}. The transaction may not be loaded properly.`);
+                return;
+            }
+            
+            console.log('Badge element found:', badgeElement);
+            
+            // Get the parent element (the <p> tag)
             const parentElement = badgeElement.parentElement;
             
             // Create container span for dropdown
