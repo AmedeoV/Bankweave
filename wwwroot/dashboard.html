@@ -2883,18 +2883,18 @@
                 };
 
                 // Encrypt if crypto is initialized
-                if (window.cryptoManager && window.cryptoManager.isInitialized()) {
-                    const encrypted = await window.cryptoManager.encryptTransaction({
+                if (cryptoManager && cryptoManager.isInitialized) {
+                    const encrypted = await cryptoManager.encryptTransaction({
                         description,
                         amount,
                         category,
                         counterpartyName: '' // empty for manual transactions
                     });
                     
-                    transactionData.descriptionEncrypted = encrypted.descriptionEncrypted;
-                    transactionData.amountEncrypted = encrypted.amountEncrypted;
-                    transactionData.categoryEncrypted = encrypted.categoryEncrypted;
-                    transactionData.counterpartyNameEncrypted = encrypted.counterpartyNameEncrypted;
+                    transactionData.descriptionEncrypted = encrypted.description;
+                    transactionData.amountEncrypted = encrypted.amount;
+                    transactionData.categoryEncrypted = encrypted.category;
+                    transactionData.counterpartyNameEncrypted = encrypted.counterpartyName;
                 }
 
                 const response = await Auth.fetchWithAuth('/api/accounts/manual-transaction', {
@@ -2947,9 +2947,9 @@
             formData.append('accountName', accountName);
             
             // Encrypt account name if this is a new account
-            if (accountSelect.value === 'new' && window.cryptoManager && window.cryptoManager.isInitialized()) {
+            if (accountSelect.value === 'new' && cryptoManager && cryptoManager.isInitialized) {
                 try {
-                    const encryptedDisplayName = await window.cryptoManager.encrypt(accountName);
+                    const encryptedDisplayName = await cryptoManager.encrypt(accountName);
                     formData.append('displayNameEncrypted', encryptedDisplayName);
                 } catch (error) {
                     console.error('Failed to encrypt account name:', error);
@@ -2976,7 +2976,7 @@
                     }
 
                     // Auto-encrypt the newly imported transactions if encryption is available
-                    if (cryptoManager && cryptoManager.isInitialized() && data.importedCount > 0) {
+                    if (cryptoManager && cryptoManager.isInitialized && data.importedCount > 0) {
                         await autoEncryptNewTransactions();
                     }
                 } else {
