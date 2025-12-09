@@ -3030,17 +3030,28 @@
                 if (response.ok) {
                     closeCsvModal();
                     
+                    // Auto-encrypt the newly imported transactions if encryption is available
+                    if (cryptoManager && cryptoManager.isInitialized && data.importedCount > 0) {
+                        await autoEncryptNewTransactions();
+                    }
+
+                    // Auto-apply categorization rules to newly imported transactions
+                    if (data.importedCount > 0) {
+                        try {
+                            await Auth.fetchWithAuth('/api/categorizationrules/apply', {
+                                method: 'POST'
+                            });
+                        } catch (error) {
+                            console.error('Failed to auto-apply rules:', error);
+                        }
+                    }
+                    
                     // Check if this is a new account that needs balance setup
                     if (data.isNewAccount) {
                         showBalanceModal(data.accountId, data.detectedBalance, data.hasBalanceColumn);
                     } else {
                         alert(`Success! Imported ${data.importedCount} transactions (${data.skippedCount} duplicates skipped). Balance: €${data.currentBalance.toFixed(2)}`);
                         await loadData();
-                    }
-
-                    // Auto-encrypt the newly imported transactions if encryption is available
-                    if (cryptoManager && cryptoManager.isInitialized && data.importedCount > 0) {
-                        await autoEncryptNewTransactions();
                     }
                 } else {
                     alert(`Failed to import CSV: ${data.error || 'Unknown error'}`);
@@ -3697,9 +3708,23 @@
                 'Utilities'
             ];
 
-            // Find elements WITHIN the modal, not document-wide
-            const modalContainer = document.getElementById('modalTransactionsList');
-            const badgeElement = modalContainer.querySelector(`#category-badge-${transactionId}`);
+            // Determine which modal is active and find elements within it
+            const categoryModal = document.getElementById('categoryTransactionsModal');
+            const accountModal = document.getElementById('transactionsModal');
+            
+            let modalContainer, badgeElement;
+            
+            if (categoryModal && categoryModal.style.display === 'block') {
+                // We're in the category transactions modal (Overview page)
+                modalContainer = document.getElementById('categoryTransactionsList');
+                badgeElement = modalContainer.querySelector(`#category-badge-modal-${transactionId}`);
+            } else if (accountModal && accountModal.classList.contains('active')) {
+                // We're in the account transactions modal
+                modalContainer = document.getElementById('modalTransactionsList');
+                badgeElement = modalContainer.querySelector(`#category-badge-${transactionId}`);
+            } else {
+                return; // No modal is active
+            }
             
             if (!badgeElement) {
                 return;
@@ -3825,9 +3850,24 @@
 
         // Cancel category change in modal
         function cancelCategoryChangeModal(transactionId, currentCategory) {
-            // Find elements within modal
-            const modalContainer = document.getElementById('modalTransactionsList');
-            const badgeElement = modalContainer.querySelector(`#category-badge-${transactionId}`);
+            // Determine which modal is active
+            const categoryModal = document.getElementById('categoryTransactionsModal');
+            const accountModal = document.getElementById('transactionsModal');
+            
+            let modalContainer, badgeElement;
+            
+            if (categoryModal && categoryModal.style.display === 'block') {
+                // We're in the category transactions modal (Overview page)
+                modalContainer = document.getElementById('categoryTransactionsList');
+                badgeElement = modalContainer.querySelector(`#category-badge-modal-${transactionId}`);
+            } else if (accountModal && accountModal.classList.contains('active')) {
+                // We're in the account transactions modal
+                modalContainer = document.getElementById('modalTransactionsList');
+                badgeElement = modalContainer.querySelector(`#category-badge-${transactionId}`);
+            } else {
+                return; // No modal is active
+            }
+            
             const dropdownElement = document.getElementById(`category-dropdown-modal-${transactionId}`);
             
             // Show badge again
