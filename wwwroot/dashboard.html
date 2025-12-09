@@ -2287,6 +2287,8 @@
 
         // Show category dropdown when badge is clicked
         function showCategoryDropdown(transactionId, currentCategory) {
+            console.log('showCategoryDropdown called with:', transactionId, currentCategory);
+            
             const categories = [
                 'Balance Payment',
                 'Banking Fees',
@@ -2325,9 +2327,17 @@
             const badgeElement = document.getElementById(`category-badge-${transactionId}`);
             const dropdownElement = document.getElementById(`category-dropdown-${transactionId}`);
             
+            console.log('Found elements:', { badgeElement, dropdownElement });
+            
+            if (!badgeElement || !dropdownElement) {
+                console.error('Could not find elements for transaction', transactionId);
+                return;
+            }
+            
             // Hide badge, show dropdown
             badgeElement.style.display = 'none';
             dropdownElement.style.display = 'inline-block';
+            console.log('Badge hidden, dropdown shown');
             
             const categoryOptions = categories.map(cat => 
                 `<option value="${cat}" ${currentCategory === cat ? 'selected' : ''}>${cat}</option>`
