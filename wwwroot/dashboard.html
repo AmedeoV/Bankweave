@@ -2268,10 +2268,17 @@
             // Attach event listeners to category badges
             setTimeout(() => {
                 const badges = container.querySelectorAll('.category-badge');
-                badges.forEach(badge => {
+                console.log(`Attaching event listeners to ${badges.length} category badges in container:`, containerId);
+                badges.forEach((badge, index) => {
+                    const txId = badge.getAttribute('data-transaction-id');
+                    const category = badge.getAttribute('data-category');
+                    console.log(`Badge ${index}: txId=${txId}, category=${category}, id=${badge.id}`);
+                    
                     badge.addEventListener('click', function(e) {
+                        console.log('Category badge clicked!', this);
                         const txId = this.getAttribute('data-transaction-id');
                         const category = this.getAttribute('data-category');
+                        console.log('Badge data:', { txId, category, useModalDropdown });
                         if (txId && category) {
                             // Call appropriate dropdown function based on context
                             if (useModalDropdown) {
@@ -2279,6 +2286,8 @@
                             } else {
                                 showCategoryDropdown(txId, category);
                             }
+                        } else {
+                            console.error('Missing txId or category:', { txId, category });
                         }
                     });
                 });
