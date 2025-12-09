@@ -1622,10 +1622,38 @@
             <div class="form-group">
                 <label for="transactionCategory">Category</label>
                 <select id="transactionCategory" style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; color: #1f2937; background: white;">
+                    <option value="Balance Payment">Balance Payment</option>
+                    <option value="Banking Fees">Banking Fees</option>
+                    <option value="Bills">Bills</option>
+                    <option value="Car Leasing">Car Leasing</option>
+                    <option value="Cash Withdrawal">Cash Withdrawal</option>
+                    <option value="Cashback">Cashback</option>
+                    <option value="Charity">Charity</option>
+                    <option value="Child Benefits">Child Benefits</option>
+                    <option value="Childminder">Childminder</option>
+                    <option value="Clothing">Clothing</option>
+                    <option value="Credit Card Repayment">Credit Card Repayment</option>
+                    <option value="Education">Education</option>
+                    <option value="Entertainment">Entertainment</option>
+                    <option value="Groceries">Groceries</option>
+                    <option value="Healthcare">Healthcare</option>
+                    <option value="Hello Fresh">Hello Fresh</option>
+                    <option value="Home & Garden">Home & Garden</option>
                     <option value="Income">Income</option>
-                    <option value="Expense">Expense</option>
-                    <option value="Transfer">Transfer</option>
+                    <option value="Insurance">Insurance</option>
+                    <option value="Interests">Interests</option>
+                    <option value="Investments">Investments</option>
+                    <option value="Large Expense">Large Expense</option>
+                    <option value="Mortgage">Mortgage</option>
                     <option value="Other">Other</option>
+                    <option value="Restaurants & Dining">Restaurants & Dining</option>
+                    <option value="Salary">Salary</option>
+                    <option value="Shopping">Shopping</option>
+                    <option value="Transfer In">Transfer In</option>
+                    <option value="Transfers">Transfers</option>
+                    <option value="Transport">Transport</option>
+                    <option value="Travel">Travel</option>
+                    <option value="Utilities">Utilities</option>
                 </select>
             </div>
             <div style="margin-top: 20px; display: flex; gap: 10px;">
@@ -2211,7 +2239,7 @@
             container.innerHTML = transactions.map(txn => {
                 const isIncome = txn.amount > 0;
                 const escapedCategory = (txn.category || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                const categoryBadge = txn.category ? `<span class="category-badge" onclick="showCategoryDropdown('${txn.id}', '${escapedCategory}')" style="cursor: pointer; background: #667eea; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 5px;">${txn.category}</span>` : '';
+                const categoryBadge = txn.category ? `<span id="category-badge-${txn.id}" class="category-badge" onclick="showCategoryDropdown('${txn.id}', '${escapedCategory}')" style="cursor: pointer; background: #667eea; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 5px;">${txn.category}</span>` : '';
                 const accountBadge = txn.accountName ? `<span style="background: #95a5a6; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 5px;">${txn.accountName}</span>` : '';
                 const essentialBadge = !isIncome && txn.isEssentialExpense ? `<span style="background: #f59e0b; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 5px;">🎯 Essential</span>` : '';
                 const essentialToggle = !isIncome ? `<button onclick="toggleEssential('${txn.id}', ${txn.isEssentialExpense || false}, '${escapeHtml(txn.description || '').replace(/'/g, "\\'")}' )" style="background: ${txn.isEssentialExpense ? '#f59e0b' : '#374151'}; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 11px; margin-left: 5px;" title="${txn.isEssentialExpense ? 'Remove from essential' : 'Mark as essential'}">${txn.isEssentialExpense ? '🎯' : '➕🎯'}</button>` : '';
@@ -2222,7 +2250,7 @@
                             <h4>${txn.description || 'No description'}</h4>
                             <p>
                                 ${accountBadge}
-                                <span id="category-badge-${txn.id}">${categoryBadge}</span>
+                                ${categoryBadge}
                                 <span id="category-dropdown-${txn.id}" style="display: none; margin-left: 5px;"></span>
                                 ${essentialBadge}
                                 ${essentialToggle}
