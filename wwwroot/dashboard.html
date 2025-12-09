@@ -2383,6 +2383,24 @@
             badgeElement.style.display = 'none';
             
             console.log('Dropdown created and inserted into DOM');
+            console.log('Parent element after insertion:', parentElement);
+            console.log('Parent offsetWidth:', parentElement.offsetWidth);
+            console.log('Parent offsetHeight:', parentElement.offsetHeight);
+            
+            // Check if parent or ancestors are hidden
+            let el = parentElement;
+            let depth = 0;
+            while (el && depth < 10) {
+                const styles = window.getComputedStyle(el);
+                console.log(`Ancestor ${depth} (${el.tagName}):`, 
+                    'display:', styles.display, 
+                    'visibility:', styles.visibility,
+                    'offsetWidth:', el.offsetWidth,
+                    'offsetHeight:', el.offsetHeight);
+                el = el.parentElement;
+                depth++;
+            }
+            
             console.log('Select element:', selectEl);
             console.log('Select offsetWidth:', selectEl.offsetWidth);
             console.log('Select offsetHeight:', selectEl.offsetHeight);
