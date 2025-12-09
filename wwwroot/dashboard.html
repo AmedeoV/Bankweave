@@ -3694,6 +3694,12 @@
         function showCategoryDropdownModal(transactionId, currentCategory) {
             console.log('showCategoryDropdownModal called:', transactionId, currentCategory);
             
+            // Check if modal is visible
+            const modal = document.getElementById('transactionsModal');
+            console.log('Modal element:', modal);
+            console.log('Modal display:', window.getComputedStyle(modal).display);
+            console.log('Modal has active class:', modal.classList.contains('active'));
+            
             const categories = [
                 'Balance Payment',
                 'Banking Fees',
