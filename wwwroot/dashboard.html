@@ -3552,7 +3552,7 @@
                 } else {
                     list.innerHTML = filtered.map(tx => {
                         const isIncome = tx.amount > 0;
-                        const escapedCategory = (tx.category || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                        const escapedCategory = (tx.category || '').replace(/'/g, "\\'");
                         const essentialBadge = !isIncome && tx.isEssentialExpense ? `<span style="background: #f59e0b; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 5px;">🎯 Essential</span>` : '';
                         const essentialToggle = !isIncome ? `<button onclick="toggleEssentialInModal('${tx.id}', ${tx.isEssentialExpense || false}, '${escapeHtml(tx.description || '').replace(/'/g, "\\'")}' )" style="background: ${tx.isEssentialExpense ? '#f59e0b' : '#374151'}; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 11px; margin-left: 5px;" title="${tx.isEssentialExpense ? 'Remove from essential' : 'Mark as essential'}">${tx.isEssentialExpense ? '🎯' : '➕🎯'}</button>` : '';
                         
@@ -3562,7 +3562,7 @@
                                     <div>
                                         <strong style="color: #ffffff;">${tx.description || 'No description'}</strong>
                                         <span id="category-badge-modal-${tx.id}">
-                                            <span class="category-badge" onclick="showCategoryDropdownModal('${tx.id}', '${escapedCategory}')" style="cursor: pointer; background: linear-gradient(135deg, #06b6d4 0%, #14b8a6 100%); color: white; padding: 4px 10px; border-radius: 6px; font-size: 11px; margin-left: 8px; font-weight: 500;">${tx.category}</span>
+                                            <span class="category-badge" data-transaction-id="${tx.id}" data-category="${tx.category || ''}" style="cursor: pointer; background: linear-gradient(135deg, #06b6d4 0%, #14b8a6 100%); color: white; padding: 4px 10px; border-radius: 6px; font-size: 11px; margin-left: 8px; font-weight: 500;">${tx.category}</span>
                                         </span>
                                         <span id="category-dropdown-modal-${tx.id}" style="display: none; margin-left: 8px;"></span>
                                         ${essentialBadge}
@@ -3576,6 +3576,17 @@
                             </div>
                         `;
                     }).join('');
+                    
+                    // Attach event listeners to category badges
+                    setTimeout(() => {
+                        document.querySelectorAll('#categoryTransactionsList .category-badge').forEach(badge => {
+                            badge.addEventListener('click', function() {
+                                const txId = this.getAttribute('data-transaction-id');
+                                const category = this.getAttribute('data-category');
+                                showCategoryDropdownModal(txId, category);
+                            });
+                        });
+                    }, 0);
                 }
                 
                 modal.style.display = 'block';
