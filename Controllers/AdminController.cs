@@ -1,5 +1,6 @@
 using Bankweave.Entities;
 using Bankweave.Infrastructure;
+using Bankweave.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -15,15 +16,18 @@ public class AdminController : ControllerBase
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly AppDbContext _context;
     private readonly ILogger<AdminController> _logger;
+    private readonly DemoDataSeederService _demoSeeder;
 
     public AdminController(
         UserManager<ApplicationUser> userManager,
         AppDbContext context,
-        ILogger<AdminController> logger)
+        ILogger<AdminController> logger,
+        DemoDataSeederService demoSeeder)
     {
         _userManager = userManager;
         _context = context;
         _logger = logger;
+        _demoSeeder = demoSeeder;
     }
 
     [HttpGet("users")]
@@ -215,6 +219,42 @@ public class AdminController : ControllerBase
     {
         var roles = await _context.Roles.Select(r => r.Name).ToListAsync();
         return Ok(roles);
+    }
+
+    [HttpPost("demo/reset")]
+    public async Task<IActionResult> ResetDemoAccount()
+    {
+        try
+        {
+            _logger.LogInformation("Admin is resetting demo account...");
+            
+            var (success, message, userId) = await _demoSeeder.CreateDemoAccountAsync();
+            
+            if (!success)
+            {
+                _logger.LogError("Failed to reset demo account: {Message}", message);
+                return BadRequest(new { error = message });
+            }
+
+            _logger.LogInformation("Demo account reset successfully by admin. UserId: {UserId}", userId);
+            
+            return Ok(new
+            {
+                success = true,
+                message = "Demo account reset successfully",
+                userId = userId,
+                credentials = new
+                {
+                    email = "demo@bankweave.app",
+                    password = "Demo123!"
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error resetting demo account");
+            return StatusCode(500, new { error = "An error occurred while resetting the demo account", details = ex.Message });
+        }
     }
 }
 
