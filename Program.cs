@@ -20,6 +20,7 @@ builder.Services.AddScoped<CategoryLearningService>();
 builder.Services.AddScoped<TransactionCategorizationService>();
 builder.Services.AddScoped<RecurringTransactionAnalyzer>();
 builder.Services.AddScoped<RuleBasedCategorizationService>();
+builder.Services.AddScoped<DemoDataSeederService>();
 
 // Database configuration
 var dbHost = builder.Configuration["Database:Host"] ?? "localhost";

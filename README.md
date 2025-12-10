@@ -14,6 +14,36 @@ A privacy-focused personal financial dashboard with **zero-knowledge encryption*
 
 ## Quick Start
 
+### Try the Demo Account 🎮
+
+Experience Bankweave instantly with pre-loaded sample data:
+
+```powershell
+# Start the application
+docker-compose up -d
+
+# Create demo account with sample data
+curl -X POST http://localhost:8083/api/demo/create-demo-account
+
+# Or use the test script
+./test-demo-account.ps1  # Windows
+./test-demo-account.sh   # Linux/Mac
+```
+
+**Demo Credentials:**
+- Email: `demo@bankweave.app`
+- Password: `Demo123!`
+
+The demo account includes:
+- 4 financial accounts (Checking, Savings, Credit Card, Investment)
+- 100+ realistic transactions over 3 months
+- Pre-configured categorization rules
+- Sample income, expenses, and investment data
+
+📖 **[Complete Demo Guide](DEMO_ACCOUNT_GUIDE.md)**
+
+### Deploy Your Own Instance
+
 ```powershell
 # Clone and start
 git clone https://github.com/AmedeoV/Bankweave.git
@@ -35,6 +65,7 @@ docker-compose up -d
 
 ## Documentation
 
+- [🎮 Demo Account Guide](DEMO_ACCOUNT_GUIDE.md) - Try Bankweave with sample data
 - [CSV Import Guide](CSV_IMPORT_GUIDE.md)
 - [Docker Quick Start](DOCKER_QUICK_START.md)
 

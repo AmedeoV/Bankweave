@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bankweave Demo Account</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #667eea;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        
+        .credentials {
+            background: #f7f9fc;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .credential-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        
+        .credential-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .label {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .value {
+            font-family: 'Courier New', monospace;
+            color: #667eea;
+            font-weight: bold;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+        }
+        
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 15px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .button:active {
+            transform: translateY(0);
+        }
+        
+        .button.secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        
+        .features {
+            margin-top: 30px;
+        }
+        
+        .feature-list {
+            list-style: none;
+            margin-top: 15px;
+        }
+        
+        .feature-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+            color: #555;
+        }
+        
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .feature-list li::before {
+            content: "✓";
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            display: block;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            display: block;
+        }
+        
+        .status.loading {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            display: block;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #999;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏦 Bankweave Demo</h1>
+        <p class="subtitle">Try Bankweave with realistic financial data</p>
+        
+        <div class="credentials">
+            <div class="credential-item">
+                <span class="label">Email:</span>
+                <span class="value" id="email">demo@bankweave.app</span>
+            </div>
+            <div class="credential-item">
+                <span class="label">Password:</span>
+                <span class="value" id="password">Demo123!</span>
+            </div>
+        </div>
+        
+        <button class="button" onclick="createDemoAccount()">
+            🎮 Create/Reset Demo Account
+        </button>
+        
+        <button class="button secondary" onclick="window.location.href='/'">
+            🚀 Go to Bankweave
+        </button>
+        
+        <div id="status" class="status"></div>
+        
+        <div class="features">
+            <h3 style="color: #333; margin-bottom: 5px;">What's Included</h3>
+            <ul class="feature-list">
+                <li>4 financial accounts (Checking, Savings, Credit Card, Investment)</li>
+                <li>100+ realistic transactions spanning 3 months</li>
+                <li>Pre-configured smart categorization rules</li>
+                <li>Income tracking (salary, dividends, interest)</li>
+                <li>Essential expenses (rent, utilities, groceries)</li>
+                <li>Discretionary spending (dining, entertainment, shopping)</li>
+                <li>Investment portfolio with stock transactions</li>
+            </ul>
+        </div>
+        
+        <div class="footer">
+            <p>This demo account is reset on each creation.</p>
+            <p>Perfect for testing and showcasing Bankweave features!</p>
+        </div>
+    </div>
+    
+    <script>
+        async function createDemoAccount() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = 'status loading';
+            statusDiv.textContent = '⏳ Creating demo account...';
+            
+            try {
+                const response = await fetch('/api/demo/create-demo-account', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    statusDiv.className = 'status success';
+                    statusDiv.innerHTML = `
+                        <strong>✓ Success!</strong><br>
+                        Demo account created with ${data.stats.transactionsCount} transactions.<br>
+                        You can now login with the credentials above!
+                    `;
+                    
+                    // Auto-redirect after 3 seconds
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 3000);
+                } else {
+                    throw new Error(data.error || 'Failed to create demo account');
+                }
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = `
+                    <strong>✗ Error</strong><br>
+                    ${error.message}
+                `;
+            }
+        }
+        
+        // Show API endpoint info in console
+        console.log('%c🏦 Bankweave Demo Account', 'color: #667eea; font-size: 20px; font-weight: bold;');
+        console.log('API Endpoint: POST /api/demo/create-demo-account');
+        console.log('Demo Credentials:', {
+            email: 'demo@bankweave.app',
+            password: 'Demo123!'
+        });
+    </script>
+</body>
+</html>
