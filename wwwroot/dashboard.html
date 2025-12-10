@@ -4686,7 +4686,7 @@
                 const balanceData = await balanceResponse.json();
                 console.log('✓ Balance history loaded');
                 if (balanceData.length === 0) {
-                    document.getElementById('balanceChart').innerHTML = `
+                    document.getElementById('balanceHistoryChart').innerHTML = `
                         <div class="empty-state">
                             <h3>No Balance History</h3>
                             <p>No balance snapshots found for this period</p>
