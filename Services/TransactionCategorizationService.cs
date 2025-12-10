@@ -33,7 +33,6 @@ public class TransactionCategorizationService
         ["Clothing"] = new() { "clothing", "clothes", "fashion", "patagonia", "north face", "nike", "adidas" },
         ["Education"] = new() { "school", "college", "university", "course", "udemy", "coursera", "books" },
         ["Home & Garden"] = new() { "furniture", "ikea", "homebase", "woodies", "b&q", "hardware", "garden" },
-        ["Hello Fresh"] = new() { "hello fresh", "hellofresh" },
         ["Interests"] = new() { "interest", "interest earned", "interest paid" },
         ["Cashback"] = new() { "cashback", "cash back", "reward", "refund" }
     };
