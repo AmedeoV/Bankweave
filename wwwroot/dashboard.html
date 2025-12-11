@@ -3618,8 +3618,13 @@
             }
         }
 
-        async function viewCategoryTransactions(category) {
+        async function viewCategoryTransactions(category, days = currentCategoryDays) {
             try {
+                // Calculate date range
+                const endDate = new Date();
+                const startDate = new Date();
+                startDate.setDate(endDate.getDate() - days);
+                
                 // Fetch all accounts to get all transactions
                 const accountsResponse = await Auth.fetchWithAuth('/api/accounts');
                 if (!accountsResponse.ok) {
@@ -3641,8 +3646,11 @@
                     allTransactions = allTransactions.concat(transactions);
                 }
                 
-                // Filter by category
-                const filtered = allTransactions.filter(tx => tx.category === category);
+                // Filter by category and date range
+                const filtered = allTransactions.filter(tx => {
+                    const txDate = new Date(tx.date);
+                    return tx.category === category && txDate >= startDate && txDate <= endDate;
+                });
                 
                 // Sort by date descending
                 filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -3652,7 +3660,7 @@
                 const title = document.getElementById('categoryTransactionsTitle');
                 const list = document.getElementById('categoryTransactionsList');
                 
-                title.textContent = `${category} Transactions`;
+                title.textContent = `${category} Transactions (${days} days)`;
                 
                 if (filtered.length === 0) {
                     list.innerHTML = '<p style="text-align: center; color: rgba(255, 255, 255, 0.6); padding: 20px;">No transactions found</p>';
@@ -4399,7 +4407,7 @@
                 const percentage = ((cat.total / total) * 100).toFixed(1);
                 const escapedCategory = cat.category.replace(/'/g, "\\'");
                 return `
-                    <div onclick="viewCategoryTransactions('${escapedCategory}')" style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(255, 255, 255, 0.08); border-radius: 12px; margin-bottom: 10px; cursor: pointer; transition: all 0.3s; border: 1px solid rgba(255, 255, 255, 0.1);" onmouseover="this.style.background='rgba(255, 255, 255, 0.12)'; this.style.borderColor='rgba(99, 102, 241, 0.5)'" onmouseout="this.style.background='rgba(255, 255, 255, 0.08)'; this.style.borderColor='rgba(255, 255, 255, 0.1)'">
+                    <div onclick="viewCategoryTransactions('${escapedCategory}', currentCategoryDays)" style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(255, 255, 255, 0.08); border-radius: 12px; margin-bottom: 10px; cursor: pointer; transition: all 0.3s; border: 1px solid rgba(255, 255, 255, 0.1);" onmouseover="this.style.background='rgba(255, 255, 255, 0.12)'; this.style.borderColor='rgba(99, 102, 241, 0.5)'" onmouseout="this.style.background='rgba(255, 255, 255, 0.08)'; this.style.borderColor='rgba(255, 255, 255, 0.1)'">
                         <div>
                             <div style="font-weight: 600; color: #ffffff; margin-bottom: 3px;">${cat.category}</div>
                             <div style="font-size: 12px; color: rgba(255, 255, 255, 0.6);">${cat.count} transactions</div>
@@ -4492,7 +4500,7 @@
                 const percentage = ((cat.total / total) * 100).toFixed(1);
                 const escapedCategory = cat.category.replace(/'/g, "\\'");
                 return `
-                    <div onclick="viewCategoryTransactions('${escapedCategory}')" style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(255, 255, 255, 0.08); border-radius: 12px; margin-bottom: 10px; cursor: pointer; transition: all 0.3s; border: 1px solid rgba(255, 255, 255, 0.1);" onmouseover="this.style.background='rgba(255, 255, 255, 0.12)'; this.style.borderColor='rgba(16, 185, 129, 0.5)'" onmouseout="this.style.background='rgba(255, 255, 255, 0.08)'; this.style.borderColor='rgba(255, 255, 255, 0.1)'">
+                    <div onclick="viewCategoryTransactions('${escapedCategory}', currentIncomeCategoryDays)" style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(255, 255, 255, 0.08); border-radius: 12px; margin-bottom: 10px; cursor: pointer; transition: all 0.3s; border: 1px solid rgba(255, 255, 255, 0.1);" onmouseover="this.style.background='rgba(255, 255, 255, 0.12)'; this.style.borderColor='rgba(16, 185, 129, 0.5)'" onmouseout="this.style.background='rgba(255, 255, 255, 0.08)'; this.style.borderColor='rgba(255, 255, 255, 0.1)'">
                         <div>
                             <div style="font-weight: 600; color: #ffffff; margin-bottom: 3px;">${cat.category}</div>
                             <div style="font-size: 12px; color: rgba(255, 255, 255, 0.6);">${cat.count} transactions</div>
