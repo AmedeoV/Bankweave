@@ -35,7 +35,8 @@ public class TransactionCategorizationService
         ["Home & Garden"] = new() { "furniture", "ikea", "homebase", "woodies", "b&q", "hardware", "garden" },
         ["Holidays"] = new() { "holiday", "vacation", "trip", "resort", "beach", "spa" },
         ["Interests"] = new() { "interest", "interest earned", "interest paid" },
-        ["Cashback"] = new() { "cashback", "cash back", "reward", "refund" }
+        ["Refund"] = new() { "refund", "reimbursement", "return", "chargeback" },
+        ["Cashback"] = new() { "cashback", "cash back", "reward" }
     };
 
     public async Task<string> CategorizeTransactionAsync(string userId, string description, string? counterpartyName, decimal amount)
