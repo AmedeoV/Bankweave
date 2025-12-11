@@ -1905,7 +1905,13 @@
         // Load overview stats
         async function loadOverview() {
             try {
-                const response = await Auth.fetchWithAuth('/api/stats/overview');
+                // Check if custom date range is active
+                let url = '/api/stats/overview';
+                if (globalCustomStartDate && globalCustomEndDate) {
+                    url += `?startDate=${globalCustomStartDate}&endDate=${globalCustomEndDate}`;
+                }
+                
+                const response = await Auth.fetchWithAuth(url);
                 const data = await response.json();
                 
                 document.getElementById('totalBalance').textContent = formatCurrency(data.totalBalance);
@@ -4285,6 +4291,10 @@
             loadRecurringTransactions(months);
         }
 
+        // Global custom date range state
+        let globalCustomStartDate = null;
+        let globalCustomEndDate = null;
+
         // Category breakdown
         let currentCategoryDays = 30;
         let categoryChart = null;
@@ -4566,6 +4576,10 @@
                 return;
             }
             
+            // Store custom dates in global variables so loadOverview() can reuse them
+            globalCustomStartDate = startDate;
+            globalCustomEndDate = endDate;
+            
             // Mark all section period buttons to show custom is active
             document.querySelectorAll('.period-selector .period-btn').forEach(btn => {
                 btn.classList.remove('active');
@@ -4734,10 +4748,17 @@
             }
         }
         
-        function clearGlobalCustomRange() {
+        async function clearGlobalCustomRange() {
+            // Clear global custom date variables
+            globalCustomStartDate = null;
+            globalCustomEndDate = null;
+            
             // Clear date inputs
             document.getElementById('global-start-date').value = '';
             document.getElementById('global-end-date').value = '';
+            
+            // Reload overview with default 30-day period
+            await loadOverview();
             
             // Reset all sections to their default periods
             changeCategoryPeriod(30);
