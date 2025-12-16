@@ -12,6 +12,7 @@ services:
       - "5436:5432"
     networks:
       - bankweave-network-prod
+    restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin} -d ${POSTGRES_DB:-bankweavedb}"]
       interval: 10s
